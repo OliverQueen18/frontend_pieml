@@ -1,0 +1,15 @@
+<div class="track-page">
+  <div class="container">
+    <a routerLink="/" class="back">← Accueil</a>
+    <h1>Suivre mon dossier</h1>
+    <p class="subtitle">Saisissez le numéro de dossier ou scannez le QR code reçu lors de votre dépôt.</p>
+
+    <div class="search-card card">
+      <app-track-dossier-search
+        [readerId]="readerId"
+        inputId="page-dossier-reference"
+        [initialReference]="initialReference"
+        [showOpenDossierButton]="false" />
+    </div>
+  </div>
+</div>

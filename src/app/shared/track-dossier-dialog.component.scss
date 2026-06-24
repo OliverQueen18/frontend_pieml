@@ -1,0 +1,115 @@
+@import './dialog.scss';
+
+.track-dialog-backdrop {
+  animation: track-dialog-fade-in 0.22s ease;
+}
+
+.track-dialog {
+  position: relative;
+  max-width: 520px;
+  border: 1px solid rgba(30, 58, 95, 0.12);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 28px 56px rgba(15, 23, 42, 0.2),
+    0 12px 24px rgba(15, 23, 42, 0.1),
+    0 4px 8px rgba(15, 23, 42, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.85) inset;
+  animation: track-dialog-rise 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.track-dialog-accent {
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--pie-green, #1aab4b) 0%,
+    #2ecc71 45%,
+    var(--pie-navy, #1e3a5f) 100%
+  );
+  flex-shrink: 0;
+}
+
+.track-dialog-header {
+  padding: 1.25rem 1.5rem 1.15rem;
+  border-bottom: 1px solid rgba(30, 58, 95, 0.08);
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.track-dialog-title-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.track-dialog-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid rgba(26, 171, 75, 0.22);
+  box-shadow:
+    0 4px 12px rgba(26, 171, 75, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  i {
+    font-size: 1.15rem;
+    color: var(--pie-green, #1aab4b);
+  }
+}
+
+.track-dialog-close {
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+
+  &:hover {
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  }
+}
+
+.track-dialog-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+  background: #fff;
+}
+
+@keyframes track-dialog-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes track-dialog-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 560px) {
+  .track-dialog {
+    border-radius: 16px;
+  }
+
+  .track-dialog-header,
+  .track-dialog-body {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+
+  .track-dialog-icon {
+    width: 2.45rem;
+    height: 2.45rem;
+    border-radius: 12px;
+
+    i {
+      font-size: 1rem;
+    }
+  }
+}

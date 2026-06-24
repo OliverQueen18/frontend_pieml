@@ -1,0 +1,269 @@
+<div class="wizard">
+  <div class="wizard-header">
+    <h1>Nouvelle demande d'immatriculation</h1>
+    <div class="steps-indicator">
+      @for (s of [1,2,3]; track s) {
+        <div class="step-dot" [class.active]="step >= s" [class.current]="step === s">
+          {{ s }}
+        </div>
+        @if (s < 3) { <div class="step-line" [class.active]="step > s"></div> }
+      }
+    </div>
+    <div class="step-labels">
+      <span>Engin</span><span>Documents</span><span>Paiement</span>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success">{{ success }}</div> }
+
+  <!-- Step 1: Vehicle -->
+  @if (step === 1) {
+    <div class="card step-content">
+      <h2>Informations de l'engin</h2>
+      <form [formGroup]="vehicleForm" (ngSubmit)="createDossier()">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Type d'engin *</label>
+            <select formControlName="vehicleTypeId">
+              <option [ngValue]="null">Sélectionner un type</option>
+              @for (t of vehicleTypes; track t.id) {
+                <option [ngValue]="t.id">{{ t.libelle }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Marque *</label>
+            <select formControlName="brandId">
+              <option [ngValue]="null">Sélectionner une marque</option>
+              @for (b of vehicleBrands; track b.id) {
+                <option [ngValue]="b.id">{{ b.libelle }}</option>
+              }
+            </select>
+          </div>
+          @if (isOtherBrandSelected) {
+            <div class="form-group">
+              <label>Précisez la marque *</label>
+              <input formControlName="brandOther" placeholder="MARQUE" (input)="toUppercase('brandOther')">
+            </div>
+          }
+          <div class="form-group">
+            <label>Modèle *</label>
+            <input formControlName="model" placeholder="XTZ 125" (input)="toUppercase('model')">
+          </div>
+          <div class="form-group">
+            <label>Cylindrée</label>
+            <input formControlName="engineCapacity" placeholder="125CC" (input)="toUppercase('engineCapacity')">
+          </div>
+          <div class="form-group">
+            <label>Année de fabrication *</label>
+            <input
+              type="text"
+              inputmode="numeric"
+              maxlength="4"
+              formControlName="year"
+              [attr.min]="minYear"
+              [attr.max]="maxYear"
+              (input)="onYearInput()">
+            @if (vehicleForm.get('year')?.invalid && vehicleForm.get('year')?.touched) {
+              <small class="field-error">Année invalide (4 chiffres, entre {{ minYear }} et {{ maxYear }})</small>
+            }
+          </div>
+          <div class="form-group">
+            <label>Numéro moteur</label>
+            <input formControlName="engineNumber" (input)="toUppercase('engineNumber')">
+          </div>
+          <div class="form-group">
+            <label>Numéro châssis *</label>
+            <input formControlName="chassisNumber" (input)="toUppercase('chassisNumber')">
+          </div>
+          <div class="form-group">
+            <label>Couleur *</label>
+            <input formControlName="color" placeholder="NOIR" (input)="toUppercase('color')">
+          </div>
+          <div class="form-group">
+            <label>Pays d'origine</label>
+            <select formControlName="countryOfOrigin">
+              <option value="">Sélectionner un pays</option>
+              @for (country of countries; track country) {
+                <option [value]="country">{{ country }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-outline" (click)="finish()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading || vehicleForm.invalid">
+            {{ loading ? 'Création...' : 'Suivant' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- Step 2: Documents -->
+  @if (step === 2 && dossier) {
+    <div class="card step-content">
+      <h2>Téléversement des documents</h2>
+      <div class="ref-row">
+        <p class="ref">Dossier : <strong>{{ dossier.referenceNumber }}</strong></p>
+        <app-dossier-qr [reference]="dossier.referenceNumber" [compact]="true" [showHint]="false" />
+      </div>
+      <div class="upload-grid">
+        @for (doc of documents; track doc.id) {
+          <div class="upload-card" [class.uploaded]="doc.status === 'UPLOADED'" [class.optional]="!doc.typeDocument.obligatoire">
+            <h4>
+              {{ doc.typeDocument.libelle }}
+              @if (doc.typeDocument.obligatoire) { <span class="required">*</span> }
+              @else { <span class="optional-label">(facultatif)</span> }
+            </h4>
+            @if (doc.typeDocument.description) {
+              <p class="doc-desc">{{ doc.typeDocument.description }}</p>
+            }
+            @if (doc.status === 'UPLOADED') {
+              <div class="uploaded-info">
+                <i class="pi pi-check-circle"></i>
+                <span>{{ doc.fileName }}</span>
+              </div>
+            } @else {
+              <label class="upload-btn">
+                <input type="file" (change)="onFileSelected(doc.typeDocument.id, $event)" accept="image/*,.pdf" hidden>
+                @if (uploadProgress[doc.typeDocument.id]) { Chargement... } @else { Choisir un fichier }
+              </label>
+            }
+          </div>
+        }
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-outline" (click)="step = 1">Retour</button>
+        <button type="button" class="btn btn-primary" [disabled]="loading || !allRequiredDocsUploaded()" (click)="goToPayment()">
+          Suivant
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Step 3: Payment -->
+  @if (step === 3) {
+    <div class="payment-grid">
+      @if (dossier) {
+        <div class="card qr-card">
+          <h2>Votre QR code dossier</h2>
+          <p class="qr-intro">Conservez ce code pour suivre votre demande. Une copie vous a été envoyée par email.</p>
+          <app-dossier-qr [reference]="dossier.referenceNumber" [size]="220" [showDownload]="true" />
+        </div>
+      }
+      <div class="card" [formGroup]="paymentForm">
+        <h2>Récapitulatif des frais</h2>
+        @if (loadingPaymentData) {
+          <p class="payment-loading">Chargement des tarifs et centres...</p>
+        } @else if (registrationTariff) {
+          <div class="fee-row">
+            <span>{{ registrationTariff.libelle }}</span>
+            <strong>{{ formatFcfa(registrationTariff.amount) }}</strong>
+          </div>
+          @if (registrationTariff.description) {
+            <p class="fee-desc">{{ registrationTariff.description }}</p>
+          }
+          @if (registrationTariff.serviceFee > 0) {
+            <div class="fee-row">
+              <span>Frais de service</span>
+              <strong>{{ formatFcfa(registrationTariff.serviceFee) }}</strong>
+            </div>
+          }
+          <div class="fee-row total">
+            <span>Total à payer</span>
+            <strong>{{ formatFcfa(totalFee) }}</strong>
+          </div>
+        } @else {
+          <p class="payment-loading">Tarifs indisponibles pour le moment.</p>
+        }
+
+        <h3 class="center-section-title">Centre d'immatriculation</h3>
+        <p class="center-section-hint">Centres les plus proches de votre adresse enregistrée.</p>
+        @if (loadingPaymentData) {
+          <p class="payment-loading">Chargement des centres...</p>
+        } @else if (sortedCenters.length === 0) {
+          <p class="payment-loading">Aucun centre disponible.</p>
+        } @else {
+          <div class="center-list">
+            @for (center of sortedCenters; track center.id; let i = $index) {
+              <label class="center-option" [class.selected]="paymentForm.value.centerId === center.id">
+                <input type="radio" formControlName="centerId" [value]="center.id">
+                <div class="center-option-body">
+                  <div class="center-option-header">
+                    <strong>{{ center.city }} — {{ center.name }}</strong>
+                    @if (i === 0 && center.distanceKm != null) {
+                      <span class="nearest-badge">Le plus proche</span>
+                    }
+                  </div>
+                  @if (center.address) {
+                    <p class="center-address">{{ center.address }}</p>
+                  }
+                  @if (center.distanceKm != null) {
+                    <span class="distance-badge">≈ {{ center.distanceKm | number:'1.0-1' }} km</span>
+                  }
+                </div>
+              </label>
+            }
+          </div>
+          @if (paymentForm.get('centerId')?.invalid && paymentForm.get('centerId')?.touched) {
+            <small class="field-error">Sélectionnez un centre pour continuer.</small>
+          }
+        }
+      </div>
+      <div class="card">
+        <h2>Paiement via TrésorPay</h2>
+        <div class="payment-single">
+          <i class="pi pi-wallet"></i>
+          <div>
+            <strong>Compte Trésor Pay</strong>
+            <p>
+              Paiement sécurisé des frais d'immatriculation
+              @if (registrationTariff) {
+                ({{ formatFcfa(totalFee) }}).
+              }
+              @if (selectedCenter) {
+                Centre : {{ selectedCenter.city }} — {{ selectedCenter.name }}.
+              }
+            </p>
+          </div>
+        </div>
+        <button
+          class="btn btn-primary btn-block"
+          [disabled]="loading || loadingPaymentData || paymentForm.invalid || !registrationTariff"
+          (click)="pay()">
+          @if (loading) {
+            Traitement...
+          } @else if (registrationTariff) {
+            Payer {{ formatFcfa(totalFee) }}
+          } @else {
+            Payer
+          }
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Step 4: Confirmation -->
+  @if (step === 4) {
+    <div class="card confirmation">
+      <div class="check-icon">✓</div>
+      <h2>Votre demande a été enregistrée</h2>
+      @if (dossier) {
+        <p>Paiement confirmé pour le dossier <strong>{{ dossier.referenceNumber }}</strong>.</p>
+        @if (dossier.processingCenter) {
+          <p>
+            <strong>Centre choisi :</strong>
+            {{ dossier.processingCenter.city }} — {{ dossier.processingCenter.name }}
+          </p>
+        }
+        <p class="confirmation-note">Le centre sélectionné a été informé de votre demande. Conservez votre QR code pour suivre l'avancement.</p>
+        <div class="confirmation-qr">
+          <app-dossier-qr [reference]="dossier.referenceNumber" [size]="180" [showDownload]="true" />
+        </div>
+      }
+      <button class="btn btn-primary" (click)="finish()">Retour au tableau de bord</button>
+    </div>
+  }
+</div>

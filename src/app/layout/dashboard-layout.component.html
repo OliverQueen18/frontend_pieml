@@ -1,0 +1,61 @@
+<div class="dashboard">
+  <aside class="sidebar">
+    <a routerLink="/" class="sidebar-brand">
+      <img src="assets/logo-pieml-ssfond.png" alt="" class="sidebar-logo-img">
+    </a>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/tableau-de-bord" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <i class="pi pi-home"></i> Tableau de bord
+      </a>
+
+      <div class="nav-section">MON DOSSIER</div>
+      <a routerLink="/tableau-de-bord/nouvelle-demande" routerLinkActive="active">
+        <i class="pi pi-plus-circle"></i> Nouvelle demande
+      </a>
+      <a routerLink="/tableau-de-bord" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <i class="pi pi-folder"></i> Mes demandes
+      </a>
+      <button type="button" class="nav-btn" (click)="openTrackDialog()">
+        <i class="pi pi-search"></i> Suivre un dossier
+      </button>
+
+      <div class="nav-section">MON COMPTE</div>
+      <a routerLink="/tableau-de-bord/profil" routerLinkActive="active">
+        <i class="pi pi-user"></i> Profil
+      </a>
+      <a routerLink="/tableau-de-bord/securite" routerLinkActive="active">
+        <i class="pi pi-lock"></i> Sécurité
+      </a>
+
+      <div class="nav-section">AIDE & SUPPORT</div>
+      <a routerLink="/tableau-de-bord/faq" routerLinkActive="active">
+        <i class="pi pi-question-circle"></i> FAQ
+      </a>
+      <a routerLink="/tableau-de-bord/contact" routerLinkActive="active">
+        <i class="pi pi-envelope"></i> Nous contacter
+      </a>
+    </nav>
+
+    <button class="logout-btn" (click)="logout()">
+      <i class="pi pi-sign-out"></i> Se déconnecter
+    </button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <h1>Espace citoyen</h1>
+      <div class="user-info">
+        <span class="welcome">Bienvenue, <strong>{{ auth.fullName() }}</strong></span>
+        <button type="button" class="avatar" (click)="logout()" aria-label="Se déconnecter" title="Se déconnecter">
+          {{ auth.user()?.firstName?.charAt(0) }}{{ auth.user()?.lastName?.charAt(0) }}
+        </button>
+      </div>
+    </header>
+    <div class="content">
+      <router-outlet />
+    </div>
+  </main>
+
+  <app-track-dossier-dialog readerId="dashboard-track-qr-reader" />
+</div>

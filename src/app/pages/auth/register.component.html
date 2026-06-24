@@ -1,0 +1,235 @@
+<div class="register-page">
+  <!-- Panneau gauche — parcours d'inscription -->
+  <aside class="register-showcase">
+    <div class="showcase-bg" aria-hidden="true">
+      <img src="assets/login-panel-gauche.png" alt="" class="showcase-bg-img">
+    </div>
+    <div class="showcase-inner">
+      <div class="showcase-panel">
+        <div class="showcase-head">
+          <p class="showcase-badge">Parcours citoyen</p>
+          <h2>Immatriculez votre engin<br><span>en 6 étapes simples</span></h2>
+          <p class="showcase-lead">
+            Créez votre compte, déposez votre dossier en ligne et suivez chaque étape jusqu'à l'obtention de votre plaque.
+          </p>
+        </div>
+
+        <ol class="process-steps">
+          @for (step of registrationSteps; track step.num; let last = $last) {
+            <li class="process-step" [class.active]="step.active" [class.done]="step.done">
+              <div class="step-marker">
+                <span class="step-num">{{ step.num }}</span>
+                <i class="pi {{ step.icon }}"></i>
+              </div>
+              <div class="step-body">
+                <strong>{{ step.title }}</strong>
+                <span>{{ step.desc }}</span>
+              </div>
+              @if (!last) {
+                <div class="step-connector" aria-hidden="true"></div>
+              }
+            </li>
+          }
+        </ol>
+
+        <div class="showcase-foot">
+          <div class="showcase-stat">
+            <i class="pi pi-wallet"></i>
+            <div>
+              <strong>12 000 FCFA</strong>
+              <span>Tarif unique — Trésor Pay</span>
+            </div>
+          </div>
+          <div class="showcase-stat">
+            <i class="pi pi-shield"></i>
+            <div>
+              <strong>100 % sécurisé</strong>
+              <span>Plateforme officielle de l'État</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Panneau droit — formulaire -->
+  <main class="register-main">
+    <div class="register-card">
+      <h1>
+        Rejoignez
+        <span class="brand-pie">PIE</span><span class="brand-ml">ML</span>
+      </h1>
+      <p class="register-sub">Créez votre compte citoyen — étape 1 sur 2</p>
+
+      @if (error) {
+        <div class="alert alert-error">{{ error }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field-row">
+          <div class="field">
+            <span class="field-icon"><i class="pi pi-user"></i></span>
+            <input type="text" formControlName="firstName" class="field-uppercase" placeholder="Prénom" autocomplete="given-name" (input)="toUppercase('firstName')">
+          </div>
+          <div class="field">
+            <span class="field-icon"><i class="pi pi-user"></i></span>
+            <input type="text" formControlName="lastName" class="field-uppercase" placeholder="Nom" autocomplete="family-name" (input)="toUppercase('lastName')">
+          </div>
+        </div>
+
+        <div class="field field--nina">
+          <label class="nina-label">NINA / BIOMÉTRIE <span class="nina-required">*</span></label>
+          <div class="nina-boxes" formArrayName="ninaDigits" (paste)="onNinaPaste($event)">
+            @for (i of ninaIndexes; track i) {
+              <input
+                #ninaInput
+                type="text"
+                class="nina-box"
+                [formControlName]="i"
+                maxlength="1"
+                inputmode="text"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                placeholder="·"
+                (input)="onNinaInput(i, $event)"
+                (keydown)="onNinaKeydown(i, $event)"
+                [attr.aria-label]="'Caractère NINA ' + (i + 1)">
+            }
+          </div>
+          @if (ninaDigits.touched && ninaDigits.invalid) {
+            <p class="nina-error">Saisissez les 15 caractères alphanumériques (une lettre ou un chiffre par case).</p>
+          }
+        </div>
+
+        <div class="field field--phone">
+          <label class="phone-label">Téléphone <span class="phone-required">*</span></label>
+          <div class="phone-row">
+            <select formControlName="phoneCountryCode" class="phone-prefix" aria-label="Indicatif pays">
+              @for (country of countryCodes; track country.code) {
+                <option [value]="country.code">{{ country.flag }} {{ country.label }} ({{ country.code }})</option>
+              }
+            </select>
+            <div class="phone-boxes" formArrayName="phoneDigits" (paste)="onPhonePaste($event)">
+              @for (i of phoneIndexes; track i) {
+                <input
+                  #phoneInput
+                  type="text"
+                  class="phone-box"
+                  [formControlName]="i"
+                  maxlength="1"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  autocomplete="tel-national"
+                  spellcheck="false"
+                  placeholder="·"
+                  (input)="onPhoneInput(i, $event)"
+                  (keydown)="onPhoneKeydown(i, $event)"
+                  [attr.aria-label]="'Chiffre téléphone ' + (i + 1)">
+              }
+            </div>
+          </div>
+          @if (phoneDigits.touched && phoneDigits.invalid) {
+            <p class="phone-error">Saisissez les 8 chiffres du numéro (sans l'indicatif).</p>
+          }
+        </div>
+
+        <div class="field field--email">
+          <label class="field-label">Email <span class="field-required">*</span></label>
+          <div class="field-control">
+            <span class="field-icon"><i class="pi pi-envelope"></i></span>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="exemple@email.ml"
+              autocomplete="email"
+              (blur)="form.controls.email.setValue(form.controls.email.value?.trim() ?? '')">
+          </div>
+          @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+            <p class="field-error">L'email est obligatoire.</p>
+          } @else if (form.controls.email.touched && form.controls.email.hasError('pattern')) {
+            <p class="field-error">Format email invalide (ex. nom&#64;domaine.ml).</p>
+          }
+        </div>
+
+        <div class="field field--textarea">
+          <span class="field-icon field-icon--top"><i class="pi pi-map-marker"></i></span>
+          <textarea formControlName="address" rows="2" placeholder="Adresse — quartier, commune, ville"></textarea>
+        </div>
+
+        <app-osm-location-picker
+          [address]="form.controls.address.value ?? ''"
+          [requestLocationOnInit]="true"
+          (locationSelected)="onLocationSelected($event)" />
+        @if (geoError) {
+          <p class="geo-error">{{ geoError }}</p>
+        }
+
+        <div class="field">
+          <span class="field-icon"><i class="pi pi-lock"></i></span>
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Mot de passe (min. 8 caractères)"
+            autocomplete="new-password">
+          <button type="button" class="field-toggle" (click)="showPassword = !showPassword"
+            [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+            <i class="pi" [class.pi-eye]="!showPassword" [class.pi-eye-slash]="showPassword"></i>
+          </button>
+        </div>
+
+        <button type="submit" class="btn-register" [disabled]="loading || form.invalid">
+          {{ loading ? 'Inscription en cours…' : 'Créer mon compte' }}
+        </button>
+
+        @if (loading) {
+          <div class="otp-send-progress" role="status" aria-live="polite" aria-busy="true">
+            <div class="otp-send-progress-head">
+              <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+              <span>Envoi du code OTP en cours</span>
+              <strong>{{ otpProgress }}%</strong>
+            </div>
+            <div class="otp-progress-track" aria-hidden="true">
+              <div class="otp-progress-fill" [style.width.%]="otpProgress"></div>
+            </div>
+            <p class="otp-progress-label">{{ otpSendSteps[otpStepIndex] }}…</p>
+            <ol class="otp-progress-steps">
+              @for (step of otpSendSteps; track step; let i = $index) {
+                <li [class.done]="i < otpStepIndex" [class.active]="i === otpStepIndex">
+                  <span class="otp-step-marker" aria-hidden="true">
+                    @if (i < otpStepIndex) {
+                      <i class="pi pi-check"></i>
+                    } @else if (i === otpStepIndex) {
+                      <i class="pi pi-spin pi-spinner"></i>
+                    } @else {
+                      {{ i + 1 }}
+                    }
+                  </span>
+                  <span>{{ step }}</span>
+                </li>
+              }
+            </ol>
+          </div>
+        }
+      </form>
+
+      <p class="login-link">
+        Vous avez déjà un compte ?
+        <a routerLink="/connexion">Se connecter</a>
+      </p>
+
+      <p class="otp-hint">
+        <i class="pi pi-info-circle"></i>
+        Un code OTP vous sera envoyé par email pour valider votre compte.
+      </p>
+    </div>
+
+    <footer class="register-secure">
+      <i class="pi pi-shield"></i>
+      <span>Plateforme sécurisée par l'État du Mali</span>
+      <span class="flag-mini" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+    </footer>
+  </main>
+</div>

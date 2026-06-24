@@ -1,0 +1,165 @@
+<div class="admin-page">
+  <div class="page-header">
+    <h2>Gestion des notifications</h2>
+    <p>Consultez, créez et gérez les notifications envoyées aux utilisateurs.</p>
+  </div>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input type="search" [(ngModel)]="searchQuery" placeholder="Rechercher par message, email ou destinataire…" aria-label="Rechercher une notification">
+    </div>
+    <div class="date-range-filters">
+      <label class="date-filter">
+        <span>Du</span>
+        <input type="date" [(ngModel)]="dateFrom" (ngModelChange)="onDateFilterChange()" aria-label="Date de début">
+      </label>
+      <label class="date-filter">
+        <span>Au</span>
+        <input type="date" [(ngModel)]="dateTo" (ngModelChange)="onDateFilterChange()" aria-label="Date de fin">
+      </label>
+      <label class="date-filter period-filter">
+        <span>Période</span>
+        <select [(ngModel)]="periodPreset" (ngModelChange)="onPeriodChange($event)" aria-label="Période">
+          @for (p of periodOptions; track p.value) {
+            <option [ngValue]="p.value">{{ p.label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="admin-card table-card">
+    <div class="results-meta">
+      {{ filteredNotifications.length }} notification(s)
+      @if (periodPreset === 'all') {
+        <span class="date-range-hint"> — toutes les périodes</span>
+      } @else if (dateFrom && dateTo) {
+        <span class="date-range-hint"> — {{ periodLabel() }} : du {{ formatDisplayDate(dateFrom) }} au {{ formatDisplayDate(dateTo) }}</span>
+      }
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>DESTINATAIRE</th>
+            <th>TYPE</th>
+            <th>MESSAGE</th>
+            <th>LU</th>
+            <th>DATE</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (n of filteredNotifications; track n.id) {
+            <tr [class.inactive-row]="n.read">
+              <td>
+                <strong>{{ n.userName || n.userEmail }}</strong>
+                <div class="sub-text">{{ n.userEmail }}</div>
+              </td>
+              <td><span class="badge role">{{ typeLabels[n.type] || n.type }}</span></td>
+              <td class="message-cell">{{ n.message }}</td>
+              <td>
+                <button type="button" class="status-toggle" [class.active]="!n.read" [disabled]="togglingId === n.id" (click)="toggleRead(n)">
+                  <span class="status-toggle-track"><span class="status-toggle-thumb"></span></span>
+                  <span class="status-toggle-label">{{ n.read ? 'Lu' : 'Non lu' }}</span>
+                </button>
+              </td>
+              <td>{{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td class="actions">
+                <button type="button" class="btn btn-sm btn-outline" (click)="openView(n)">Afficher</button>
+                <button type="button" class="btn btn-sm btn-outline" (click)="openEdit(n)">Modifier</button>
+                <button type="button" class="btn btn-sm btn-outline btn-danger-outline" (click)="remove(n)">Supprimer</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty">Aucune notification pour cette période.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showForm) {
+  <div class="dialog-backdrop" (click)="cancelForm()" role="presentation">
+    <div class="dialog dialog-md" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <div>
+          <h2>{{ editingId ? 'Modifier la notification' : 'Nouvelle notification' }}</h2>
+          <p>{{ editingId ? 'Modifiez le contenu ou le statut de lecture.' : 'Envoyez une notification à un utilisateur.' }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="cancelForm()" aria-label="Fermer"><i class="pi pi-times"></i></button>
+      </header>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid modal-form">
+        <div class="form-group full">
+          <label for="notif-email">Email du destinataire</label>
+          <input id="notif-email" type="email" formControlName="userEmail" placeholder="utilisateur@example.ml">
+        </div>
+        <div class="form-group">
+          <label for="notif-type">Type</label>
+          <select id="notif-type" formControlName="type">
+            @for (t of typeOptions; track t) {
+              <option [value]="t">{{ typeLabels[t] }}</option>
+            }
+          </select>
+        </div>
+        @if (editingId) {
+          <div class="form-group checkbox-group">
+            <label class="checkbox-card">
+              <input type="checkbox" formControlName="read">
+              <span><strong>Marquer comme lue</strong></span>
+            </label>
+          </div>
+        } @else {
+          <div class="form-group checkbox-group">
+            <label class="checkbox-card">
+              <input type="checkbox" formControlName="sendEmail">
+              <span><strong>Envoyer aussi par email</strong></span>
+            </label>
+          </div>
+        }
+        <div class="form-group full">
+          <label for="notif-message">Message</label>
+          <textarea id="notif-message" formControlName="message" rows="4" maxlength="500"></textarea>
+        </div>
+        <div class="form-group full modal-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid">{{ editingId ? 'Enregistrer' : 'Envoyer' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (viewingItem; as item) {
+  <div class="dialog-backdrop" (click)="closeView()" role="presentation">
+    <div class="dialog dialog-md" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <div>
+          <h2>Notification</h2>
+          <p>{{ item.userName }} — {{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeView()" aria-label="Fermer"><i class="pi pi-times"></i></button>
+      </header>
+      <div class="detail-body">
+        <div class="detail-status">
+          <span class="detail-badge" [class.active]="!item.read">{{ item.read ? 'Lue' : 'Non lue' }}</span>
+          <span class="badge role">{{ typeLabels[item.type] || item.type }}</span>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Destinataire</span><span class="detail-value">{{ item.userEmail }}</span></div>
+          <div class="detail-item span-2"><span class="detail-label">Message</span><span class="detail-value">{{ item.message }}</span></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" (click)="closeView()">Fermer</button>
+        <button type="button" class="btn btn-outline" (click)="openEditFromView()">Modifier</button>
+        <button type="button" class="btn btn-danger" (click)="remove(item)">Supprimer</button>
+      </div>
+    </div>
+  </div>
+}

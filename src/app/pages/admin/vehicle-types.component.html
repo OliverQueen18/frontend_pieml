@@ -1,0 +1,139 @@
+<div class="admin-page">
+  <div class="page-header">
+    <h2>Types d'engins</h2>
+    <p>Configurez les types d'engins proposés lors d'une nouvelle demande.</p>
+  </div>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        [(ngModel)]="searchQuery"
+        placeholder="Rechercher par code, libellé ou description…"
+        aria-label="Rechercher un type d'engin">
+    </div>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">
+      <i class="pi pi-plus"></i> Nouveau type
+    </button>
+  </div>
+
+  <div class="admin-card table-card">
+    <div class="results-meta">{{ filteredTypes.length }} type(s)</div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ordre</th>
+            <th>Code</th>
+            <th>Libellé</th>
+            <th>Description</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of filteredTypes; track t.id) {
+            <tr [class.inactive-row]="!t.actif">
+              <td>{{ t.ordre }}</td>
+              <td><code class="code-tag">{{ t.code }}</code></td>
+              <td>{{ t.libelle }}</td>
+              <td class="desc">{{ t.description || '—' }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="status-toggle"
+                  [class.active]="t.actif"
+                  [disabled]="togglingId === t.id"
+                  [attr.aria-pressed]="t.actif"
+                  [attr.aria-label]="(t.actif ? 'Désactiver' : 'Activer') + ' ' + t.libelle"
+                  (click)="toggleActive(t)">
+                  <span class="status-toggle-track">
+                    <span class="status-toggle-thumb"></span>
+                  </span>
+                  <span class="status-toggle-label">{{ t.actif ? 'Actif' : 'Inactif' }}</span>
+                </button>
+              </td>
+              <td class="actions">
+                <button type="button" class="btn btn-sm btn-outline" (click)="openEdit(t)">Modifier</button>
+                <button type="button" class="btn btn-sm btn-outline" (click)="remove(t.id)">Supprimer</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty">
+                @if (searchQuery.trim()) {
+                  Aucun type ne correspond à votre recherche.
+                } @else {
+                  Aucun type configuré.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showForm) {
+  <div class="dialog-backdrop" (click)="cancelForm()" role="presentation">
+    <div
+      class="dialog lookup-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="editingId ? 'edit-type-title' : 'create-type-title'"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+        <div>
+          <h2 [id]="editingId ? 'edit-type-title' : 'create-type-title'">
+            {{ editingId ? 'Modifier le type' : 'Nouveau type d\'engin' }}
+          </h2>
+          <p>Définissez le code et le libellé affichés dans le formulaire citoyen.</p>
+        </div>
+        <button type="button" class="close-btn" (click)="cancelForm()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid modal-form">
+        <div class="form-group">
+          <label for="type-code">Code</label>
+          <input id="type-code" formControlName="code" placeholder="MOTO">
+        </div>
+        <div class="form-group">
+          <label for="type-ordre">Ordre</label>
+          <input id="type-ordre" type="number" formControlName="ordre" min="1">
+        </div>
+        <div class="form-group full">
+          <label for="type-libelle">Libellé</label>
+          <input id="type-libelle" formControlName="libelle" placeholder="Moto">
+        </div>
+        <div class="form-group full">
+          <label for="type-desc">Description</label>
+          <input id="type-desc" formControlName="description" placeholder="Description courte (facultatif)">
+        </div>
+        <div class="form-group checkbox-group">
+          <label class="checkbox-card">
+            <input type="checkbox" formControlName="actif">
+            <span>
+              <strong>Actif</strong>
+              <small>Visible dans les nouvelles demandes</small>
+            </span>
+          </label>
+        </div>
+        <div class="form-group full modal-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+            {{ editingId ? 'Enregistrer' : 'Créer le type' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

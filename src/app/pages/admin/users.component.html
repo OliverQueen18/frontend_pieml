@@ -1,0 +1,417 @@
+<div class="admin-page">
+  <div class="page-header">
+    <h2>Comptes staff</h2>
+    <p>Gérez les administrateurs, validateurs et immatriculateurs.</p>
+  </div>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        [(ngModel)]="searchQuery"
+        placeholder="Rechercher par nom, email, téléphone ou rôle…"
+        aria-label="Rechercher un compte staff">
+    </div>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">
+      <i class="pi pi-plus"></i> Nouveau compte
+    </button>
+  </div>
+
+  <div class="admin-card table-card">
+    <div class="results-meta">{{ filteredUsers.length }} compte(s)</div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>PRÉNOM & NOM</th>
+            <th>EMAIL</th>
+            <th>TÉLÉPHONE</th>
+            <th>RÔLE</th>
+            <th>CENTRES</th>
+            <th>STATUT</th>
+            <th>CRÉÉ LE</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of filteredUsers; track u.id) {
+            <tr [class.inactive-row]="!u.enabled">
+              <td><strong>{{ fullName(u) }}</strong></td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.phone }}</td>
+              <td><span class="badge role">{{ roleLabels[u.role] || u.role }}</span></td>
+              <td class="centers-cell">{{ centersLabel(u) }}</td>
+              <td>
+                <span class="detail-badge" [class.active]="u.enabled">
+                  {{ u.enabled ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+              <td>{{ u.createdAt | date:'dd/MM/yyyy' }}</td>
+              <td class="actions">
+                <button type="button" class="btn-icon" (click)="openView(u)" aria-label="Afficher" title="Afficher">
+                  <i class="pi pi-eye" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="btn-icon" (click)="openEdit(u)" aria-label="Modifier" title="Modifier">
+                  <i class="pi pi-pencil" aria-hidden="true"></i>
+                </button>
+                @if (canAssignCenters(u)) {
+                  <button
+                    type="button"
+                    class="btn-icon"
+                    (click)="openCentersDialog(u)"
+                    aria-label="Associer aux centres"
+                    title="Associer aux centres">
+                    <i class="pi pi-map-marker" aria-hidden="true"></i>
+                  </button>
+                }
+                @if (canResetPassword(u)) {
+                  <button
+                    type="button"
+                    class="btn-icon"
+                    [disabled]="resettingId === u.id"
+                    (click)="resetPassword(u)"
+                    aria-label="Réinitialiser le mot de passe"
+                    title="Réinitialiser le mot de passe">
+                    <i class="pi pi-key" aria-hidden="true"></i>
+                  </button>
+                }
+                @if (canDeactivate(u)) {
+                  <button
+                    type="button"
+                    class="btn-icon btn-icon-warn"
+                    [disabled]="togglingStatusId === u.id"
+                    (click)="deactivate(u)"
+                    aria-label="Désactiver le compte"
+                    title="Désactiver">
+                    <i class="pi pi-ban" aria-hidden="true"></i>
+                  </button>
+                }
+                @if (canActivate(u)) {
+                  <button
+                    type="button"
+                    class="btn-icon btn-icon-success"
+                    [disabled]="togglingStatusId === u.id"
+                    (click)="activate(u)"
+                    aria-label="Réactiver le compte"
+                    title="Réactiver">
+                    <i class="pi pi-check-circle" aria-hidden="true"></i>
+                  </button>
+                }
+                @if (canDelete(u)) {
+                  <button
+                    type="button"
+                    class="btn-icon btn-icon-danger"
+                    [disabled]="removingId === u.id"
+                    (click)="remove(u)"
+                    aria-label="Supprimer le compte"
+                    title="Supprimer">
+                    <i class="pi pi-trash" aria-hidden="true"></i>
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="empty">
+                @if (searchQuery.trim()) {
+                  Aucun compte ne correspond à votre recherche.
+                } @else {
+                  Aucun compte staff.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showForm) {
+  <div class="dialog-backdrop" (click)="cancelForm()" role="presentation">
+    <div
+      class="dialog user-form-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="editingId ? 'edit-user-title' : 'create-user-title'"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+        <div>
+          <h2 [id]="editingId ? 'edit-user-title' : 'create-user-title'">
+            {{ editingId ? 'Modifier le compte' : 'Nouveau compte staff' }}
+          </h2>
+          <p>Définissez l'email, le rôle et les accès de l'utilisateur.</p>
+        </div>
+        <button type="button" class="close-btn" (click)="cancelForm()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      @if (formError) {
+        <div class="alert error form-alert">{{ formError }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid modal-form">
+        <div class="form-group">
+          <label for="user-email">Email</label>
+          <input id="user-email" type="email" formControlName="email">
+          @if (form.controls.email.invalid && form.controls.email.touched) {
+            <small class="field-error">Email invalide ou requis.</small>
+          }
+        </div>
+        <div class="form-group">
+          <label for="user-phone">Téléphone</label>
+          <input id="user-phone" formControlName="phone">
+          @if (form.controls.phone.invalid && form.controls.phone.touched) {
+            <small class="field-error">Téléphone requis.</small>
+          }
+        </div>
+        <div class="form-group">
+          <label for="user-password">
+            Mot de passe {{ editingId ? '(laisser vide pour conserver)' : '' }}
+          </label>
+          <input id="user-password" type="password" formControlName="password">
+          @if (!editingId && form.controls.password.invalid && form.controls.password.touched) {
+            <small class="field-error">Mot de passe requis (8 caractères minimum).</small>
+          }
+          @if (editingId && form.controls.password.value && form.controls.password.invalid && form.controls.password.touched) {
+            <small class="field-error">8 caractères minimum.</small>
+          }
+        </div>
+        <div class="form-group">
+          <label for="user-role">Rôle</label>
+          <select id="user-role" formControlName="role">
+            @for (r of staffRoles; track r) {
+              <option [value]="r">{{ roleLabels[r] }}</option>
+            }
+          </select>
+        </div>
+        @if (editingId) {
+          <div class="form-group checkbox-group">
+            <label class="checkbox-card">
+              <input type="checkbox" formControlName="enabled">
+              <span>
+                <strong>Compte actif</strong>
+                <small>L'utilisateur peut se connecter</small>
+              </span>
+            </label>
+          </div>
+        }
+        <div class="form-group full modal-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()" [disabled]="submitting">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || submitting">
+            {{ submitting ? 'Enregistrement…' : (editingId ? 'Enregistrer' : 'Créer le compte') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (centersUser; as user) {
+  <div class="dialog-backdrop centers-dialog-backdrop" (click)="closeCentersDialog()" role="presentation">
+    <div
+      class="dialog centers-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="centers-user-title"
+      (click)="$event.stopPropagation()">
+
+      <div class="centers-dialog-accent" aria-hidden="true"></div>
+
+      <header class="dialog-header centers-dialog-header">
+        <div class="centers-dialog-title-block">
+          <span class="centers-dialog-icon" aria-hidden="true"><i class="pi pi-map-marker"></i></span>
+          <div>
+            <h2 id="centers-user-title">Centres d'immatriculation</h2>
+            <p>Associez « {{ fullName(user) }} » aux centres de traitement.</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn" (click)="closeCentersDialog()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      @if (centersError) {
+        <div class="alert error form-alert centers-form-alert">{{ centersError }}</div>
+      }
+
+      <div class="centers-dialog-body">
+        @if (assignableCenters.length) {
+          <div class="centers-dialog-toolbar">
+            <div class="centers-search-wrap">
+              <i class="pi pi-search" aria-hidden="true"></i>
+              <input
+                type="search"
+                [(ngModel)]="centersSearchQuery"
+                placeholder="Rechercher un centre (nom, ville, adresse)…"
+                aria-label="Rechercher un centre">
+            </div>
+            @if (filteredAssignableCenters.length) {
+              <label class="select-all-card">
+                <input
+                  type="checkbox"
+                  [checked]="allFilteredCentersSelected"
+                  [indeterminate]="someFilteredCentersSelected"
+                  (change)="toggleAllCenters($any($event.target).checked)">
+                <span>
+                  <strong>Tout cocher</strong>
+                  <small>
+                    {{ selectedCenterIds.length }} sélectionné(s)
+                    @if (centersSearchQuery.trim()) {
+                      — {{ filteredAssignableCenters.length }} affiché(s)
+                    }
+                  </small>
+                </span>
+              </label>
+            }
+          </div>
+
+          @if (filteredAssignableCenters.length) {
+            <div class="center-checkboxes">
+              @for (c of filteredAssignableCenters; track c.id) {
+                <label class="checkbox-card center-option">
+                  <input
+                    type="checkbox"
+                    [checked]="isCenterSelected(c.id)"
+                    (change)="toggleCenter(c.id)">
+                  <span>
+                    <strong>{{ c.name }}</strong>
+                    <small>{{ c.city }}@if (c.address) { — {{ c.address }} }</small>
+                  </span>
+                </label>
+              }
+            </div>
+          } @else {
+            <p class="field-hint muted centers-empty">Aucun centre ne correspond à « {{ centersSearchQuery }} ».</p>
+          }
+        } @else {
+          <p class="field-hint muted">Aucun centre actif disponible pour votre périmètre.</p>
+        }
+      </div>
+
+      <div class="modal-actions centers-dialog-actions">
+        <button type="button" class="btn btn-outline" (click)="closeCentersDialog()">Annuler</button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="savingCentersId === user.id"
+          (click)="saveCenters()">
+          {{ savingCentersId === user.id ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (viewingUser; as user) {
+  <div class="dialog-backdrop" (click)="closeView()" role="presentation">
+    <div
+      class="dialog user-detail-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="view-user-title"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+        <div>
+          <h2 id="view-user-title">{{ fullName(user) }}</h2>
+          <p>Compte staff — créé le {{ user.createdAt | date:'dd/MM/yyyy' }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeView()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <div class="detail-body">
+        <div class="detail-status">
+          <span class="detail-badge" [class.active]="user.enabled">
+            {{ user.enabled ? 'Compte actif' : 'Compte désactivé' }}
+          </span>
+          <span class="badge role">{{ roleLabels[user.role] || user.role }}</span>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Prénom</span>
+            <span class="detail-value">{{ user.firstName || '—' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Nom</span>
+            <span class="detail-value">{{ user.lastName || '—' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Email</span>
+            <span class="detail-value">{{ user.email }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Téléphone</span>
+            <span class="detail-value">{{ user.phone }}</span>
+          </div>
+          <div class="detail-item span-2">
+            <span class="detail-label">Centres</span>
+            <span class="detail-value">{{ centersLabel(user) }}</span>
+          </div>
+          @if (user.mustChangePassword) {
+            <div class="detail-item span-2">
+              <span class="detail-label">Mot de passe</span>
+              <span class="detail-value warning-text">Changement requis à la prochaine connexion</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" (click)="closeView()">Fermer</button>
+        <button type="button" class="btn btn-outline" (click)="openEditFromView()">Modifier</button>
+        @if (canAssignCenters(user)) {
+          <button type="button" class="btn btn-outline" (click)="openCentersDialog(user)">
+            Associer aux centres
+          </button>
+        }
+        @if (canResetPassword(user)) {
+          <button
+            type="button"
+            class="btn btn-outline"
+            [disabled]="resettingId === user.id"
+            (click)="resetPassword(user)">
+            {{ resettingId === user.id ? 'Envoi…' : 'Réinitialiser le mot de passe' }}
+          </button>
+        }
+        @if (canDeactivate(user)) {
+          <button
+            type="button"
+            class="btn btn-danger-outline"
+            [disabled]="togglingStatusId === user.id"
+            (click)="deactivate(user)">
+            {{ togglingStatusId === user.id ? 'Désactivation…' : 'Désactiver le compte' }}
+          </button>
+        }
+        @if (canActivate(user)) {
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="togglingStatusId === user.id"
+            (click)="activate(user)">
+            {{ togglingStatusId === user.id ? 'Réactivation…' : 'Réactiver le compte' }}
+          </button>
+        }
+        @if (canDelete(user)) {
+          <button
+            type="button"
+            class="btn btn-danger"
+            [disabled]="removingId === user.id"
+            (click)="remove(user)">
+            {{ removingId === user.id ? 'Suppression…' : 'Supprimer le compte' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

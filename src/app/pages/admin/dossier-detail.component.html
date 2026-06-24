@@ -1,0 +1,320 @@
+<div class="admin-page dossier-detail-page">
+  <a routerLink="/administration/dossiers" class="back-link">
+    <i class="pi pi-arrow-left" aria-hidden="true"></i> Retour aux dossiers
+  </a>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+  @if (dossier) {
+    <div class="detail-hero">
+      <div class="detail-hero-text">
+        <h2>Dossier {{ dossier.referenceNumber }}</h2>
+        <p class="detail-meta">
+          Créé le {{ dossier.createdAt | date:'dd/MM/yyyy à HH:mm' }}
+          @if (dossier.updatedAt) {
+            · Mis à jour le {{ dossier.updatedAt | date:'dd/MM/yyyy à HH:mm' }}
+          }
+        </p>
+        <div class="detail-stats">
+          <span class="stat-chip">
+            <i class="pi pi-folder-open" aria-hidden="true"></i>
+            {{ uploadedDocumentsCount }}/{{ requiredDocumentsCount }} document(s) téléversé(s)
+          </span>
+          @if (dossier.appointment) {
+            <span class="stat-chip">
+              <i class="pi pi-calendar" aria-hidden="true"></i>
+              {{ dossier.appointment.centerName }} — {{ dossier.appointment.appointmentDate | date:'dd/MM/yyyy' }} à {{ dossier.appointment.appointmentTime }}
+            </span>
+          } @else {
+            <span class="stat-chip stat-chip--muted">
+              <i class="pi pi-calendar" aria-hidden="true"></i>
+              Aucun rendez-vous planifié
+            </span>
+          }
+        </div>
+      </div>
+      <div class="detail-hero-actions">
+        <span class="badge status-badge" [class]="statusClass(dossier.status)">
+          {{ statusLabels[dossier.status] }}
+        </span>
+        @if (canDeleteDossier()) {
+          <button
+            type="button"
+            class="btn btn-outline btn-danger-outline"
+            [disabled]="dossierActionLoading"
+            (click)="deleteDossier()">
+            <i class="pi pi-trash" aria-hidden="true"></i> Supprimer
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="detail-layout">
+      <div class="detail-main">
+        <section class="detail-card">
+          <header class="detail-card-header">
+            <span class="detail-card-icon" aria-hidden="true"><i class="pi pi-car"></i></span>
+            <h3>Engin</h3>
+          </header>
+          @if (dossier.vehicle) {
+            <div class="detail-fields">
+              <div class="detail-field">
+                <span class="field-label">Marque / Modèle</span>
+                <span class="field-value">{{ dossier.vehicle.brand }} {{ dossier.vehicle.model }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">Cylindrée</span>
+                <span class="field-value">{{ dossier.vehicle.engineCapacity || '—' }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">N° châssis</span>
+                <span class="field-value"><code>{{ dossier.vehicle.chassisNumber }}</code></span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">Couleur</span>
+                <span class="field-value">{{ dossier.vehicle.color || '—' }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">Année</span>
+                <span class="field-value">{{ dossier.vehicle.year || '—' }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">Pays d'origine</span>
+                <span class="field-value">{{ dossier.vehicle.countryOfOrigin || '—' }}</span>
+              </div>
+            </div>
+          }
+        </section>
+
+        <section class="detail-card detail-card--full">
+          <header class="detail-card-header">
+            <span class="detail-card-icon" aria-hidden="true"><i class="pi pi-folder-open"></i></span>
+            <div>
+              <h3>Documents</h3>
+              <p>{{ uploadedDocumentsCount }}/{{ requiredDocumentsCount }} téléversé(s) sur {{ requiredDocumentsCount }} requis</p>
+            </div>
+          </header>
+
+          @if (canManageDocuments()) {
+            <div class="doc-bulk-toolbar">
+              <div class="doc-bulk-meta">
+                @if (selectedDocIds.size) {
+                  <span>{{ selectedDocIds.size }} sélectionné(s)</span>
+                  <button type="button" class="btn-link" (click)="clearDocSelection()">Tout désélectionner</button>
+                } @else {
+                  <button type="button" class="btn-link" (click)="selectAllUploaded()">Sélectionner les téléversés</button>
+                }
+              </div>
+              <div class="doc-bulk-actions">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary"
+                  [disabled]="!selectedDocIds.size || docActionLoading"
+                  (click)="validateSelectedDocuments()">
+                  Valider la sélection
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline btn-danger-outline"
+                  [disabled]="!selectedDocIds.size || docActionLoading"
+                  (click)="rejectSelectedDocuments()">
+                  Rejeter la sélection
+                </button>
+              </div>
+            </div>
+          }
+
+          <div class="doc-grid">
+            @for (doc of dossier.documents; track doc.id) {
+              <article class="doc-card" [class.doc-card--empty]="!hasFile(doc)" [class.doc-card--selected]="isDocSelected(doc)">
+                @if (canManageDocuments() && hasFile(doc)) {
+                  <label class="doc-select">
+                    <input
+                      type="checkbox"
+                      [checked]="isDocSelected(doc)"
+                      (change)="toggleDocSelection(doc)">
+                  </label>
+                }
+                <div class="doc-card-icon" aria-hidden="true">
+                  <i class="pi {{ documentIcon(doc) }}"></i>
+                </div>
+                <div class="doc-card-body">
+                  <strong [attr.title]="doc.typeDocument.libelle">{{ doc.typeDocument.libelle }}</strong>
+                  <span class="doc-file-name" [attr.title]="doc.fileName || ''">
+                    {{ doc.fileName || 'Non téléversé' }}
+                  </span>
+                  <div class="doc-card-meta">
+                    <span class="doc-status" [class]="documentStatusClass(doc.status)">
+                      {{ documentStatusLabels[doc.status] || doc.status }}
+                    </span>
+                    @if (doc.fileSize) {
+                      <span class="doc-size">{{ formatFileSize(doc.fileSize) }}</span>
+                    }
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="btn-icon"
+                  [disabled]="!hasFile(doc) || previewLoading"
+                  (click)="openDocument(doc)"
+                  [attr.aria-label]="'Afficher ' + doc.typeDocument.libelle"
+                  [attr.title]="hasFile(doc) ? 'Afficher le document' : 'Document non disponible'">
+                  <i class="pi pi-eye" aria-hidden="true"></i>
+                </button>
+                @if (auth.isAdmin() && hasFile(doc)) {
+                  <button
+                    type="button"
+                    class="btn-icon btn-icon-danger"
+                    [disabled]="docActionLoading"
+                    (click)="deleteDocument(doc)"
+                    [attr.aria-label]="'Supprimer ' + doc.typeDocument.libelle"
+                    title="Supprimer le fichier">
+                    <i class="pi pi-trash" aria-hidden="true"></i>
+                  </button>
+                }
+              </article>
+            }
+          </div>
+        </section>
+      </div>
+
+      <aside class="detail-sidebar">
+        @if (dossier.payment) {
+          <section class="detail-card">
+            <header class="detail-card-header">
+              <span class="detail-card-icon detail-card-icon--green" aria-hidden="true"><i class="pi pi-wallet"></i></span>
+              <h3>Paiement</h3>
+            </header>
+            <div class="detail-fields detail-fields--stacked">
+              <div class="detail-field">
+                <span class="field-label">Montant total</span>
+                <span class="field-value field-value--amount">
+                  {{ dossier.payment.totalAmount | number:'1.0-0' }} FCFA
+                </span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">Statut</span>
+                <span class="field-value">{{ dossier.payment.status }}</span>
+              </div>
+              @if (dossier.payment.paymentMethod) {
+                <div class="detail-field">
+                  <span class="field-label">Moyen</span>
+                  <span class="field-value">{{ dossier.payment.paymentMethod }}</span>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        @if (dossier.appointment) {
+          <section class="detail-card">
+            <header class="detail-card-header">
+              <span class="detail-card-icon detail-card-icon--blue" aria-hidden="true"><i class="pi pi-calendar"></i></span>
+              <h3>Rendez-vous</h3>
+            </header>
+            <div class="detail-fields detail-fields--stacked">
+              <div class="detail-field">
+                <span class="field-label">Centre</span>
+                <span class="field-value">{{ dossier.appointment.centerName }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">Ville</span>
+                <span class="field-value">{{ dossier.appointment.centerCity }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">Date & heure</span>
+                <span class="field-value">
+                  {{ dossier.appointment.appointmentDate | date:'dd/MM/yyyy' }}
+                  à {{ dossier.appointment.appointmentTime }}
+                </span>
+              </div>
+            </div>
+          </section>
+        }
+
+        @if (canValidate() && (auth.isAdmin() || auth.role() === 'VALIDATEUR')) {
+          <section class="detail-card actions-card">
+            <header class="detail-card-header">
+              <span class="detail-card-icon detail-card-icon--yellow" aria-hidden="true"><i class="pi pi-check-square"></i></span>
+              <h3>Actions validateur</h3>
+            </header>
+
+            <div class="validator-actions">
+              <button
+                type="button"
+                class="btn btn-primary btn-block"
+                [disabled]="dossierActionLoading"
+                (click)="validate()">
+                <i class="pi pi-check" aria-hidden="true"></i> Valider le dossier
+              </button>
+
+              <div class="reject-panel">
+                <label for="reject-reason">Motif de rejet</label>
+                <textarea
+                  id="reject-reason"
+                  [(ngModel)]="rejectReason"
+                  rows="4"
+                  placeholder="Documents non conformes…"></textarea>
+                <button
+                  type="button"
+                  class="btn btn-outline btn-block btn-danger-outline"
+                  (click)="reject()"
+                  [disabled]="!rejectReason.trim() || dossierActionLoading">
+                  <i class="pi pi-times" aria-hidden="true"></i> Rejeter le dossier
+                </button>
+              </div>
+            </div>
+          </section>
+        }
+      </aside>
+    </div>
+  }
+</div>
+
+@if (previewDoc) {
+  <div class="dialog-backdrop" (click)="closePreview()" role="presentation">
+    <div
+      class="dialog doc-preview-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="doc-preview-title"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+        <div>
+          <h2 id="doc-preview-title">{{ previewDoc.typeDocument.libelle }}</h2>
+          <p>{{ previewDoc.fileName }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closePreview()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <div class="doc-preview-body">
+        @if (previewLoading) {
+          <div class="doc-preview-loading">
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+            <span>Chargement du document…</span>
+          </div>
+        } @else if (previewError) {
+          <div class="alert error">{{ previewError }}</div>
+        } @else if (previewUrl) {
+          @if (isImagePreview()) {
+            <img [src]="previewUrl" [alt]="previewDoc.fileName || 'Document'" class="doc-preview-image">
+          } @else if (isPdfPreview()) {
+            <iframe [src]="previewUrl" class="doc-preview-frame" [title]="previewDoc.fileName || 'Document PDF'"></iframe>
+          } @else {
+            <div class="doc-preview-fallback">
+              <i class="pi pi-download" aria-hidden="true"></i>
+              <p>Aperçu non disponible pour ce type de fichier.</p>
+              <a [href]="previewUrl" [download]="previewDoc.fileName || 'document'" class="btn btn-primary">
+                Télécharger le fichier
+              </a>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+}

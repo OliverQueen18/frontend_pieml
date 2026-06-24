@@ -1,0 +1,170 @@
+<div class="admin-page dashboard-home">
+  <div class="page-header">
+    <h2>Tableau de bord administration</h2>
+    <p>Vue d'ensemble de la plateforme d'immatriculation.</p>
+  </div>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+
+  @if (stats) {
+    <div class="stats-row">
+      <div class="stat-card navy">
+        <span class="num">{{ stats.totalDossiers }}</span>
+        <span class="label">Dossiers totaux</span>
+      </div>
+      <div class="stat-card orange">
+        <span class="num">{{ stats.dossiersEnCours }}</span>
+        <span class="label">En cours</span>
+      </div>
+      <div class="stat-card green">
+        <span class="num">{{ stats.dossiersValides }}</span>
+        <span class="label">Validés / payés</span>
+      </div>
+      <div class="stat-card purple">
+        <span class="num">{{ stats.immatriculations }}</span>
+        <span class="label">Immatriculations</span>
+      </div>
+      <div class="stat-card blue">
+        <span class="num">{{ stats.totalCitoyens }}</span>
+        <span class="label">Citoyens inscrits</span>
+      </div>
+      <div class="stat-card red">
+        <span class="num">{{ stats.dossiersRejetes }}</span>
+        <span class="label">Dossiers rejetés</span>
+      </div>
+      <div class="stat-card navy">
+        <span class="num">{{ stats.rendezVousPlanifies }}</span>
+        <span class="label">RDV planifiés</span>
+      </div>
+      <div class="stat-card blue">
+        <span class="num">{{ stats.totalUtilisateurs }}</span>
+        <span class="label">Comptes utilisateurs</span>
+      </div>
+    </div>
+
+    <div class="dashboard-layout">
+      <div class="dashboard-main">
+        <div class="admin-card quick-links">
+          <h3>Accès rapide</h3>
+          <div class="links">
+            @if (auth.hasPermission(P.DOSSIERS_VIEW)) {
+              <a routerLink="/administration/dossiers" class="btn btn-primary">Gérer les dossiers</a>
+            }
+            @if (auth.hasPermission(P.CITIZENS_VIEW)) {
+              <a routerLink="/administration/citoyens" class="btn btn-outline">Liste des citoyens</a>
+            }
+            @if (auth.hasPermission(P.USERS_VIEW)) {
+              <a routerLink="/administration/utilisateurs" class="btn btn-outline">Comptes staff</a>
+            }
+            @if (auth.hasPermission(P.CENTERS_VIEW)) {
+              <a routerLink="/administration/centres" class="btn btn-outline">Centres</a>
+            }
+            @if (auth.hasPermission(P.TYPE_DOCUMENTS_VIEW)) {
+              <a routerLink="/administration/types-documents" class="btn btn-outline">Types de documents</a>
+            }
+          </div>
+        </div>
+
+        <div class="admin-card charts-section">
+          <div class="charts-header">
+            <div>
+              <h3>Statistiques graphiques</h3>
+              <p class="charts-sub">{{ periodLabel() }}</p>
+            </div>
+            <div class="period-tabs" role="tablist" aria-label="Période">
+              @for (opt of periodOptions; track opt.value) {
+                <button
+                  type="button"
+                  role="tab"
+                  class="period-tab"
+                  [class.active]="chartPeriod === opt.value"
+                  [attr.aria-selected]="chartPeriod === opt.value"
+                  (click)="onPeriodChange(opt.value)">
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (chartsLoading) {
+            <p class="charts-loading">Chargement des graphiques…</p>
+          } @else {
+            <div class="charts-grid">
+              <div class="chart-card">
+                <h4>Dossiers déposés</h4>
+                @if (dossiersByPeriod.length) {
+                  <div class="bar-chart" aria-hidden="true">
+                    @for (point of dossiersByPeriod; track point.label) {
+                      <div class="bar-col" [title]="point.label + ' : ' + point.value">
+                        <div class="bar-track">
+                          <div class="bar-fill navy" [style.height]="barHeight(point.value, maxDossierValue)"></div>
+                        </div>
+                        <span class="bar-label">{{ point.label }}</span>
+                        <span class="bar-value">{{ point.value }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="chart-empty">Aucun dossier sur cette période.</p>
+                }
+              </div>
+
+              <div class="chart-card">
+                <h4>Rendez-vous par centre</h4>
+                @if (statsByCenter.length) {
+                  <div class="center-chart">
+                    @for (center of statsByCenter; track center.centerId) {
+                      <div class="center-row">
+                        <div class="center-meta">
+                          <strong>{{ center.centerName }}</strong>
+                          <span>{{ center.city }}</span>
+                        </div>
+                        <div class="center-bar-wrap">
+                          <div
+                            class="center-bar"
+                            [style.width]="barHeight(center.appointments, maxCenterValue)">
+                          </div>
+                        </div>
+                        <span class="center-count">{{ center.appointments }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="chart-empty">Aucun centre configuré.</p>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <aside class="dashboard-aside admin-card notifications-panel">
+        <div class="panel-header">
+          <h3><i class="pi pi-bell"></i> Notifications récentes</h3>
+          @if (auth.hasPermission(P.NOTIFICATIONS_VIEW)) {
+            <a routerLink="/administration/notifications" class="panel-link">Tout voir</a>
+          }
+        </div>
+
+        @if (chartsLoading && !recentNotifications.length) {
+          <p class="panel-empty">Chargement…</p>
+        } @else if (recentNotifications.length) {
+          <ul class="notification-list">
+            @for (n of recentNotifications; track n.id) {
+              <li class="notification-item" [class.unread]="!n.read">
+                <div class="notification-top">
+                  <span class="badge role">{{ typeLabels[n.type] || n.type }}</span>
+                  <time>{{ n.createdAt | date:'dd/MM HH:mm' }}</time>
+                </div>
+                <p class="notification-message">{{ n.message }}</p>
+                <span class="notification-user">{{ n.userName || n.userEmail }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="panel-empty">Aucune notification récente.</p>
+        }
+      </aside>
+    </div>
+  }
+</div>

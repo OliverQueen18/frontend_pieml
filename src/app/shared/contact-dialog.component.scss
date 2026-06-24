@@ -1,0 +1,64 @@
+@import './dialog.scss';
+
+.contact-dialog {
+  max-width: 620px;
+  border: 1px solid rgba(30, 58, 95, 0.12);
+  box-shadow:
+    0 28px 56px rgba(15, 23, 42, 0.2),
+    0 10px 24px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset;
+}
+
+.contact-dialog-header {
+  padding: 1.35rem 1.5rem 1.15rem;
+  border-bottom: 1px solid var(--pie-border, #e2e8f0);
+  background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+}
+
+.contact-dialog-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.contact-dialog-icon {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid rgba(26, 171, 75, 0.25);
+  box-shadow: 0 4px 12px rgba(26, 171, 75, 0.12);
+
+  i {
+    font-size: 1.15rem;
+    color: var(--pie-green, #1aab4b);
+  }
+}
+
+.contact-dialog-body {
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  background: #f8fafc;
+}
+
+@media (max-width: 640px) {
+  .contact-dialog-intro {
+    gap: 0.75rem;
+  }
+
+  .contact-dialog-icon {
+    width: 2.4rem;
+    height: 2.4rem;
+
+    i {
+      font-size: 1rem;
+    }
+  }
+}

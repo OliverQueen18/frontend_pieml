@@ -1,0 +1,30 @@
+@if (visible) {
+  <div class="dialog-backdrop" (click)="close()" role="presentation">
+    <div
+      class="dialog contact-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="contact-dialog-title"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header contact-dialog-header">
+        <div class="contact-dialog-intro">
+          <span class="contact-dialog-icon" aria-hidden="true">
+            <i class="pi pi-envelope"></i>
+          </span>
+          <div>
+            <h2 id="contact-dialog-title">Nous contacter</h2>
+            <p>Une question ou un problème ? Envoyez-nous un message, nous vous répondrons sous 48 h.</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn" (click)="close()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <div class="contact-dialog-body">
+        <app-contact-form [compact]="true" />
+      </div>
+    </div>
+  </div>
+}

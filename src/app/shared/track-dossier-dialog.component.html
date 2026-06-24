@@ -1,0 +1,36 @@
+@if (visible) {
+  <div class="dialog-backdrop track-dialog-backdrop" (click)="close()" role="presentation">
+    <div
+      class="dialog track-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="track-dialog-title"
+      (click)="$event.stopPropagation()">
+
+      <div class="track-dialog-accent" aria-hidden="true"></div>
+
+      <header class="dialog-header track-dialog-header">
+        <div class="track-dialog-title-block">
+          <div class="track-dialog-icon" aria-hidden="true">
+            <i class="pi pi-qrcode"></i>
+          </div>
+          <div>
+            <h2 id="track-dialog-title">Suivre un dossier</h2>
+            <p>Saisissez le numéro ou scannez le QR code du dossier.</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn track-dialog-close" (click)="close()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <div class="track-dialog-body">
+        <app-track-dossier-search
+          [readerId]="readerId"
+          inputId="dialog-dossier-reference"
+          [showOpenDossierButton]="showOpenDossierButton"
+          (dossierOpened)="close()" />
+      </div>
+    </div>
+  </div>
+}

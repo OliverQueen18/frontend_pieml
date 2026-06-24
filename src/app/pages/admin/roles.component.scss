@@ -1,0 +1,40 @@
+@use './admin-page';
+@import '../../shared/dialog.scss';
+
+// Styles spécifiques rôles / permissions (le reste est centralisé)
+
+.perm-option small {
+  font-family: ui-monospace, monospace;
+}
+
+.page-header-with-action {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  .btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+}
+
+.empty-create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.create-role-alert {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .checkbox-group {
+    grid-column: 1 / -1;
+  }
+}

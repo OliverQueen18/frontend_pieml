@@ -1,0 +1,158 @@
+<div class="admin-page">
+  <div class="page-header">
+    <h2>Citoyens</h2>
+    <p>Liste des citoyens inscrits sur la plateforme.</p>
+  </div>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        [(ngModel)]="searchQuery"
+        placeholder="Rechercher par nom, email, téléphone ou NINA…"
+        aria-label="Rechercher un citoyen">
+    </div>
+  </div>
+
+  <div class="admin-card table-card">
+    <div class="results-meta">{{ filteredCitizens.length }} citoyen(s)</div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>PRENOM & NOM</th>
+            <th>EMAIL</th>
+            <th>TELEPHONE</th>
+            <th>NINA / BIOMETRIE</th>
+            <th>NOMBRE DE DOSSIERS</th>
+            <th>DATE D'INSCRIPTION</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of filteredCitizens; track c.id) {
+            <tr [class.inactive-row]="c.enabled === false">
+              <td>
+                <strong>{{ c.firstName }} {{ c.lastName }}</strong>
+              </td>
+              <td>{{ c.email }}</td>
+              <td>{{ c.phone }}</td>
+              <td><code class="code-tag">{{ c.nina }}</code></td>
+              <td>{{ c.dossierCount }}</td>
+              <td>{{ c.createdAt | date:'dd/MM/yyyy' }}</td>
+              <td class="actions">
+                <button type="button" class="btn btn-sm btn-outline" (click)="openView(c)">Afficher</button>
+                @if (c.enabled !== false) {
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline btn-danger-outline"
+                    [disabled]="removingId === c.id"
+                    (click)="remove(c)">
+                    {{ removingId === c.id ? '…' : 'Supprimer' }}
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="empty">
+                @if (searchQuery.trim()) {
+                  Aucun citoyen ne correspond à votre recherche.
+                } @else {
+                  Aucun citoyen inscrit.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (viewingCitizen; as citizen) {
+  <div class="dialog-backdrop" (click)="closeView()" role="presentation">
+    <div
+      class="dialog citizen-detail-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="view-citizen-title"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+        <div>
+          <h2 id="view-citizen-title">{{ fullName(citizen) }}</h2>
+          <p>Fiche citoyen — inscrit le {{ citizen.createdAt | date:'dd/MM/yyyy' }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeView()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <div class="detail-body">
+        <div class="detail-status">
+          <span class="detail-badge" [class.active]="citizen.enabled !== false">
+            {{ citizen.enabled !== false ? 'Compte actif' : 'Compte désactivé' }}
+          </span>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Prénom</span>
+            <span class="detail-value">{{ citizen.firstName }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Nom</span>
+            <span class="detail-value">{{ citizen.lastName }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Email</span>
+            <span class="detail-value">{{ citizen.email }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Téléphone</span>
+            <span class="detail-value">{{ citizen.phone }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">NINA</span>
+            <span class="detail-value"><code class="code-tag">{{ citizen.nina }}</code></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Dossiers déposés</span>
+            <span class="detail-value">{{ citizen.dossierCount }}</span>
+          </div>
+          @if (citizen.address) {
+            <div class="detail-item span-2">
+              <span class="detail-label">Adresse</span>
+              <span class="detail-value">{{ citizen.address }}</span>
+            </div>
+          }
+          @if (citizen.latitude != null && citizen.longitude != null) {
+            <div class="detail-item span-2">
+              <span class="detail-label">Coordonnées</span>
+              <span class="detail-value">{{ citizen.latitude | number:'1.4-6' }}, {{ citizen.longitude | number:'1.4-6' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" (click)="closeView()">Fermer</button>
+        @if (citizen.enabled !== false) {
+          <button
+            type="button"
+            class="btn btn-danger"
+            [disabled]="removingId === citizen.id"
+            (click)="remove(citizen)">
+            {{ removingId === citizen.id ? 'Désactivation…' : 'Désactiver le compte' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

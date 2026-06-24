@@ -1,0 +1,139 @@
+<div class="admin-page">
+  <div class="page-header">
+    <h2>Marques d'engins</h2>
+    <p>Configurez les marques proposées lors d'une nouvelle demande.</p>
+  </div>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        [(ngModel)]="searchQuery"
+        placeholder="Rechercher par code, libellé ou description…"
+        aria-label="Rechercher une marque">
+    </div>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">
+      <i class="pi pi-plus"></i> Nouvelle marque
+    </button>
+  </div>
+
+  <div class="admin-card table-card">
+    <div class="results-meta">{{ filteredBrands.length }} marque(s)</div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ordre</th>
+            <th>Code</th>
+            <th>Libellé</th>
+            <th>Description</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of filteredBrands; track b.id) {
+            <tr [class.inactive-row]="!b.actif">
+              <td>{{ b.ordre }}</td>
+              <td><code class="code-tag">{{ b.code }}</code></td>
+              <td>{{ b.libelle }}</td>
+              <td class="desc">{{ b.description || '—' }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="status-toggle"
+                  [class.active]="b.actif"
+                  [disabled]="togglingId === b.id"
+                  [attr.aria-pressed]="b.actif"
+                  [attr.aria-label]="(b.actif ? 'Désactiver' : 'Activer') + ' ' + b.libelle"
+                  (click)="toggleActive(b)">
+                  <span class="status-toggle-track">
+                    <span class="status-toggle-thumb"></span>
+                  </span>
+                  <span class="status-toggle-label">{{ b.actif ? 'Actif' : 'Inactif' }}</span>
+                </button>
+              </td>
+              <td class="actions">
+                <button type="button" class="btn btn-sm btn-outline" (click)="openEdit(b)">Modifier</button>
+                <button type="button" class="btn btn-sm btn-outline" (click)="remove(b.id)">Supprimer</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty">
+                @if (searchQuery.trim()) {
+                  Aucune marque ne correspond à votre recherche.
+                } @else {
+                  Aucune marque configurée.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showForm) {
+  <div class="dialog-backdrop" (click)="cancelForm()" role="presentation">
+    <div
+      class="dialog lookup-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="editingId ? 'edit-brand-title' : 'create-brand-title'"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+        <div>
+          <h2 [id]="editingId ? 'edit-brand-title' : 'create-brand-title'">
+            {{ editingId ? 'Modifier la marque' : 'Nouvelle marque' }}
+          </h2>
+          <p>Définissez le code et le libellé affichés dans le formulaire citoyen.</p>
+        </div>
+        <button type="button" class="close-btn" (click)="cancelForm()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid modal-form">
+        <div class="form-group">
+          <label for="brand-code">Code</label>
+          <input id="brand-code" formControlName="code" placeholder="YAMAHA">
+        </div>
+        <div class="form-group">
+          <label for="brand-ordre">Ordre</label>
+          <input id="brand-ordre" type="number" formControlName="ordre" min="1">
+        </div>
+        <div class="form-group full">
+          <label for="brand-libelle">Libellé</label>
+          <input id="brand-libelle" formControlName="libelle" placeholder="Yamaha">
+        </div>
+        <div class="form-group full">
+          <label for="brand-desc">Description</label>
+          <input id="brand-desc" formControlName="description" placeholder="Description courte (facultatif)">
+        </div>
+        <div class="form-group checkbox-group">
+          <label class="checkbox-card">
+            <input type="checkbox" formControlName="actif">
+            <span>
+              <strong>Actif</strong>
+              <small>Visible dans les nouvelles demandes</small>
+            </span>
+          </label>
+        </div>
+        <div class="form-group full modal-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+            {{ editingId ? 'Enregistrer' : 'Créer la marque' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

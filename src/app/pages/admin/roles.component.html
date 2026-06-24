@@ -1,0 +1,451 @@
+<div class="admin-page">
+
+  <div class="page-header page-header-with-action">
+    <div>
+      <h2>Gestion des rôles</h2>
+      <p>Configurez les libellés des rôles et attribuez les fonctionnalités accessibles à chaque profil.</p>
+    </div>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">
+      <i class="pi pi-plus"></i> Nouveau rôle
+    </button>
+  </div>
+
+
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+
+
+  <div class="toolbar">
+
+    <div class="search-wrap">
+
+      <i class="pi pi-search" aria-hidden="true"></i>
+
+      <input type="search" [(ngModel)]="searchQuery" placeholder="Rechercher par code, libellé ou permission…" aria-label="Rechercher un rôle">
+
+    </div>
+
+    <button type="button" class="btn btn-primary" (click)="openCreate()">
+      <i class="pi pi-plus"></i> Nouveau rôle
+    </button>
+
+  </div>
+
+
+
+  <div class="admin-card table-card">
+
+    <div class="results-meta">{{ filteredRoles.length }} rôle(s)</div>
+
+    <div class="table-wrap">
+
+      <table class="data-table">
+
+        <thead>
+
+          <tr>
+
+            <th>CODE</th>
+
+            <th>LIBELLÉ</th>
+
+            <th>PERMISSIONS</th>
+
+            <th>UTILISATEURS</th>
+
+            <th>STATUT</th>
+
+            <th>CRÉÉ LE</th>
+
+            <th>ACTIONS</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          @for (r of filteredRoles; track r.id) {
+
+            <tr [class.inactive-row]="!r.active">
+
+              <td><code class="code-tag">{{ r.code }}</code></td>
+
+              <td>
+
+                <strong>{{ r.label }}</strong>
+
+                @if (r.systemRole) { <span class="badge role system">Système</span> }
+
+              </td>
+
+              <td>{{ permissionCount(r) }} fonctionnalité(s)</td>
+
+              <td>{{ r.userCount }}</td>
+
+              <td>
+
+                <button type="button" class="status-toggle" [class.active]="r.active" [disabled]="togglingId === r.id || (r.systemRole && r.active)" (click)="toggleActive(r)">
+
+                  <span class="status-toggle-track"><span class="status-toggle-thumb"></span></span>
+
+                  <span class="status-toggle-label">{{ r.active ? 'Actif' : 'Inactif' }}</span>
+
+                </button>
+
+              </td>
+
+              <td>{{ r.createdAt | date:'dd/MM/yyyy' }}</td>
+
+              <td class="actions">
+
+                <button type="button" class="btn btn-sm btn-outline" (click)="openView(r)">Afficher</button>
+
+                <button type="button" class="btn btn-sm btn-outline" (click)="openEdit(r)">Modifier</button>
+
+                @if (canManagePermissions()) {
+
+                  <button type="button" class="btn btn-sm btn-outline" (click)="openPermissions(r)">Permissions</button>
+
+                }
+
+                @if (canDelete(r)) {
+
+                  <button type="button" class="btn btn-sm btn-outline btn-danger-outline" (click)="remove(r)">Supprimer</button>
+
+                }
+
+              </td>
+
+            </tr>
+
+          } @empty {
+
+            <tr><td colspan="7" class="empty">
+              Aucun rôle configuré.
+              @if (availableCodesForCreate.length) {
+                <button type="button" class="btn btn-primary btn-sm empty-create-btn" (click)="openCreate()">
+                  <i class="pi pi-plus"></i> Créer un rôle
+                </button>
+              }
+            </td></tr>
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+@if (showPermissions && permissionsRole; as role) {
+
+  <div class="dialog-backdrop" (click)="closePermissions()" role="presentation">
+
+    <div class="dialog dialog-lg permissions-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+
+        <div>
+
+          <h2>Permissions — {{ role.label }}</h2>
+
+          <p>Cochez les fonctionnalités accessibles pour ce rôle.</p>
+
+        </div>
+
+        <button type="button" class="close-btn" (click)="closePermissions()" aria-label="Fermer"><i class="pi pi-times"></i></button>
+
+      </header>
+
+
+
+      @if (role.code === ROLES.SUPER_ADMIN) {
+
+        <p class="perm-hint">Le super administrateur dispose de toutes les permissions.</p>
+
+      } @else {
+
+        <div class="permissions-body">
+
+          @for (group of permissionGroups; track group.category) {
+
+            <section class="perm-group">
+
+              <div class="perm-group-header">
+
+                <h3>{{ group.category }}</h3>
+
+                <button type="button" class="btn btn-sm btn-outline" (click)="toggleCategory(group.items, !isCategoryFullySelected(group.items))">
+
+                  {{ isCategoryFullySelected(group.items) ? 'Tout décocher' : 'Tout cocher' }}
+
+                </button>
+
+              </div>
+
+              <div class="perm-checkboxes">
+
+                @for (perm of group.items; track perm.code) {
+
+                  <label class="checkbox-card perm-option">
+
+                    <input type="checkbox" [checked]="isPermissionSelected(perm.code)" (change)="togglePermission(perm.code)">
+
+                    <span>
+
+                      <strong>{{ perm.label }}</strong>
+
+                      <small>{{ perm.code }}</small>
+
+                    </span>
+
+                  </label>
+
+                }
+
+              </div>
+
+            </section>
+
+          }
+
+        </div>
+
+      }
+
+
+
+      <div class="modal-actions">
+
+        <button type="button" class="btn btn-outline" (click)="closePermissions()">Annuler</button>
+
+        @if (role.code !== ROLES.SUPER_ADMIN) {
+
+          <button type="button" class="btn btn-primary" [disabled]="savingPermissions" (click)="savePermissions()">
+
+            {{ savingPermissions ? 'Enregistrement…' : 'Enregistrer les permissions' }}
+
+          </button>
+
+        }
+
+      </div>
+
+    </div>
+
+  </div>
+
+}
+
+
+
+@if (showForm) {
+
+  <div class="dialog-backdrop" (click)="cancelForm()" role="presentation">
+
+    <div class="dialog dialog-md" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+
+        <div>
+
+          <h2>{{ editingId ? 'Modifier le rôle' : 'Nouveau rôle' }}</h2>
+
+          <p>Définissez le libellé affiché et la description du rôle.</p>
+
+        </div>
+
+        <button type="button" class="close-btn" (click)="cancelForm()" aria-label="Fermer"><i class="pi pi-times"></i></button>
+
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid modal-form">
+
+        @if (!editingId && !canCreateRole) {
+          <div class="form-group full">
+            <div class="alert error create-role-alert">
+              Les 5 rôles prédéfinis sont déjà configurés. Utilisez <strong>Modifier</strong> ou <strong>Permissions</strong> pour personnaliser un rôle existant.
+            </div>
+          </div>
+        } @else {
+          <div class="form-group">
+
+            <label for="role-code">Code</label>
+
+            @if (editingId) {
+
+              <input id="role-code" formControlName="code" readonly>
+
+            } @else {
+
+              <select id="role-code" formControlName="code" (change)="onCreateCodeChange($event)">
+
+                @for (c of availableCodesForCreate; track c) {
+
+                  <option [value]="c">{{ roleLabels[c] || c }}</option>
+
+                }
+
+              </select>
+
+            }
+
+          </div>
+
+          <div class="form-group">
+
+            <label for="role-label">Libellé</label>
+
+            <input id="role-label" formControlName="label">
+
+          </div>
+
+          <div class="form-group full">
+
+            <label for="role-desc">Description</label>
+
+            <textarea id="role-desc" formControlName="description" rows="3"></textarea>
+
+          </div>
+
+          <div class="form-group checkbox-group">
+
+            <label class="checkbox-card">
+
+              <input type="checkbox" formControlName="active">
+
+              <span><strong>Actif</strong><small>Peut être attribué aux utilisateurs</small></span>
+
+            </label>
+
+          </div>
+        }
+
+        <div class="form-group full modal-actions">
+
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+
+          @if (editingId || canCreateRole) {
+            <button type="submit" class="btn btn-primary" [disabled]="form.invalid">{{ editingId ? 'Enregistrer' : 'Créer' }}</button>
+          }
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+}
+
+
+
+@if (viewingRole; as role) {
+
+  <div class="dialog-backdrop" (click)="closeView()" role="presentation">
+
+    <div class="dialog dialog-md" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+
+        <div>
+
+          <h2>{{ role.label }}</h2>
+
+          <p>Code : {{ role.code }} — {{ role.userCount }} utilisateur(s)</p>
+
+        </div>
+
+        <button type="button" class="close-btn" (click)="closeView()" aria-label="Fermer"><i class="pi pi-times"></i></button>
+
+      </header>
+
+      <div class="detail-body">
+
+        <div class="detail-status">
+
+          <span class="detail-badge" [class.active]="role.active">{{ role.active ? 'Actif' : 'Inactif' }}</span>
+
+          @if (role.systemRole) { <span class="badge role">Rôle système</span> }
+
+        </div>
+
+        <div class="detail-grid">
+
+          <div class="detail-item span-2">
+
+            <span class="detail-label">Description</span>
+
+            <span class="detail-value">{{ role.description || '—' }}</span>
+
+          </div>
+
+          <div class="detail-item span-2">
+
+            <span class="detail-label">Permissions ({{ permissionCount(role) }})</span>
+
+            <div class="perm-tags">
+
+              @for (p of role.permissions || []; track p) {
+
+                <span class="badge role">{{ permissionLabel(p) }}</span>
+
+              } @empty {
+
+                <span class="detail-value">Aucune permission</span>
+
+              }
+
+            </div>
+
+          </div>
+
+          <div class="detail-item">
+
+            <span class="detail-label">Créé le</span>
+
+            <span class="detail-value">{{ role.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="modal-actions">
+
+        <button type="button" class="btn btn-outline" (click)="closeView()">Fermer</button>
+
+        <button type="button" class="btn btn-outline" (click)="openEditFromView()">Modifier</button>
+
+        @if (canManagePermissions()) {
+
+          <button type="button" class="btn btn-outline" (click)="openPermissionsFromView()">Permissions</button>
+
+        }
+
+        @if (canDelete(role)) {
+
+          <button type="button" class="btn btn-danger" (click)="remove(role)">Supprimer</button>
+
+        }
+
+      </div>
+
+    </div>
+
+  </div>
+
+}
+

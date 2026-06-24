@@ -1,0 +1,198 @@
+<div class="dashboard admin-dashboard">
+
+  <aside class="sidebar">
+
+    <a routerLink="/" class="sidebar-brand">
+
+      <img src="assets/logo-pieml-ssfond.png" alt="" class="sidebar-logo-img">
+
+    </a>
+
+
+
+    <nav class="sidebar-nav">
+
+      @if (auth.hasPermission(P.ADMIN_DASHBOARD_VIEW)) {
+
+        <a routerLink="/administration" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+
+          <i class="pi pi-home"></i> Tableau de bord
+
+        </a>
+
+      }
+
+
+
+      @if (auth.hasPermission(P.DOSSIERS_VIEW)) {
+
+        <div class="nav-section">DOSSIERS</div>
+
+        <a routerLink="/administration/dossiers" routerLinkActive="active">
+
+          <i class="pi pi-folder"></i> Tous les dossiers
+
+        </a>
+
+      }
+
+
+
+      @if (auth.hasPermission(P.CITIZENS_VIEW) || auth.hasPermission(P.USERS_VIEW)) {
+
+        <div class="nav-section">UTILISATEURS</div>
+
+        @if (auth.hasPermission(P.CITIZENS_VIEW)) {
+
+          <a routerLink="/administration/citoyens" routerLinkActive="active">
+
+            <i class="pi pi-users"></i> Citoyens
+
+          </a>
+
+        }
+
+        @if (auth.hasPermission(P.USERS_VIEW)) {
+
+          <a routerLink="/administration/utilisateurs" routerLinkActive="active">
+
+            <i class="pi pi-id-card"></i> Comptes staff
+
+          </a>
+
+        }
+
+      }
+
+
+
+      @if (auth.hasAnyPermission(P.CENTERS_VIEW, P.TYPE_DOCUMENTS_VIEW, P.VEHICLE_BRANDS_VIEW, P.VEHICLE_TYPES_VIEW, P.ROLES_VIEW, P.NOTIFICATIONS_VIEW, P.PAYMENTS_VIEW, P.TARIFFS_VIEW)) {
+
+        <div class="nav-section">CONFIGURATION</div>
+
+        @if (auth.hasPermission(P.CENTERS_VIEW)) {
+
+          <a routerLink="/administration/centres" routerLinkActive="active">
+
+            <i class="pi pi-map-marker"></i> Centres
+
+          </a>
+
+        }
+
+        @if (auth.hasPermission(P.TYPE_DOCUMENTS_VIEW)) {
+
+          <a routerLink="/administration/types-documents" routerLinkActive="active">
+
+            <i class="pi pi-file"></i> Types de documents
+
+          </a>
+
+        }
+
+        @if (auth.hasPermission(P.VEHICLE_BRANDS_VIEW)) {
+
+          <a routerLink="/administration/marques" routerLinkActive="active">
+
+            <i class="pi pi-star"></i> Marques
+
+          </a>
+
+        }
+
+        @if (auth.hasPermission(P.VEHICLE_TYPES_VIEW)) {
+
+          <a routerLink="/administration/types-engins" routerLinkActive="active">
+
+            <i class="pi pi-car"></i> Types d'engins
+
+          </a>
+
+        }
+
+        @if (auth.hasPermission(P.ROLES_VIEW)) {
+
+          <a routerLink="/administration/roles" routerLinkActive="active">
+
+            <i class="pi pi-shield"></i> Rôles
+
+          </a>
+
+        }
+
+        @if (auth.hasPermission(P.NOTIFICATIONS_VIEW)) {
+
+          <a routerLink="/administration/notifications" routerLinkActive="active">
+
+            <i class="pi pi-bell"></i> Notifications
+
+          </a>
+
+        }
+
+        @if (auth.hasPermission(P.PAYMENTS_VIEW)) {
+
+          <a routerLink="/administration/paiements" routerLinkActive="active">
+
+            <i class="pi pi-wallet"></i> Paiements
+
+          </a>
+
+        }
+
+        @if (auth.hasPermission(P.TARIFFS_VIEW)) {
+
+          <a routerLink="/administration/tarifs" routerLinkActive="active">
+
+            <i class="pi pi-tag"></i> Tarifs
+
+          </a>
+
+        }
+
+      }
+
+    </nav>
+
+
+
+    <button class="logout-btn" (click)="logout()">
+
+      <i class="pi pi-sign-out"></i> Se déconnecter
+
+    </button>
+
+  </aside>
+
+
+
+  <main class="main">
+
+    <header class="topbar">
+
+      <h1>Administration PIEML</h1>
+
+      <div class="user-info">
+
+        <span class="role-badge">{{ roleLabels[auth.role() || ''] || auth.role() }}</span>
+
+        <span class="welcome">Bienvenue, <strong>{{ auth.fullName() }}</strong></span>
+
+        <button type="button" class="avatar" (click)="logout()" aria-label="Se déconnecter" title="Se déconnecter">
+          {{ auth.user()?.firstName?.charAt(0) }}{{ auth.user()?.lastName?.charAt(0) || auth.user()?.email?.charAt(0) }}
+        </button>
+
+      </div>
+
+    </header>
+
+    <div class="content">
+
+      <router-outlet />
+
+    </div>
+
+  </main>
+
+</div>
+

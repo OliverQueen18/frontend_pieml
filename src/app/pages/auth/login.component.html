@@ -1,0 +1,91 @@
+<div class="login-page">
+  <!-- Panneau gauche — maquette officielle -->
+  <aside class="login-showcase">
+    <a routerLink="/" class="showcase-link" aria-label="Retour à l'accueil PIEML">
+      <img
+        src="assets/login-panel-gauche.png"
+        alt="PIEML — Immatriculez vos engins en toute simplicité, sécurisé et fiable, suivi en temps réel"
+        class="showcase-art">
+    </a>
+  </aside>
+
+  <!-- Panneau droit — formulaire -->
+  <main class="login-main">
+    <div class="login-card">
+      <h1>
+        Bienvenue sur
+        <span class="brand-pie">PIE</span><span class="brand-ml">ML</span>
+      </h1>
+      <p class="login-sub">Connectez-vous à votre compte</p>
+
+      @if (error) {
+        <div class="alert alert-error">{{ error }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field">
+          <span class="field-icon"><i class="pi pi-user"></i></span>
+          <input
+            type="text"
+            formControlName="identifier"
+            placeholder="Numéro de téléphone ou email"
+            autocomplete="username">
+        </div>
+
+        <div class="field">
+          <span class="field-icon"><i class="pi pi-lock"></i></span>
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Mot de passe"
+            autocomplete="current-password">
+          <button type="button" class="field-toggle" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+            <i class="pi" [class.pi-eye]="!showPassword" [class.pi-eye-slash]="showPassword"></i>
+          </button>
+        </div>
+
+        <div class="form-row">
+          <label class="remember">
+            <input type="checkbox" formControlName="rememberMe">
+            <span>Se souvenir de moi</span>
+          </label>
+          <a routerLink="/mot-de-passe-oublie" class="forgot">Mot de passe oublié ?</a>
+        </div>
+
+        <button type="submit" class="btn-login" [disabled]="loading || form.invalid">
+          {{ loading ? 'Connexion...' : 'Se connecter' }}
+        </button>
+      </form>
+
+      <p class="register-link">
+        Vous n'avez pas de compte ?
+        <a routerLink="/inscription">Créer un compte</a>
+      </p>
+
+      <div class="divider"><span>ou continuer avec</span></div>
+
+      <div class="social-row">
+        <button type="button" class="social-btn" disabled title="Bientôt disponible">
+          <span class="social-nina">NINA</span>
+        </button>
+        <button type="button" class="social-btn" disabled title="Bientôt disponible">
+          <span class="social-google">G</span>
+          Google
+        </button>
+      </div>
+
+      <div class="demo-info">
+        <strong>Démo :</strong> abdoulaye.traore&#64;example.ml / password123
+        · <strong>Admin :</strong> admin&#64;pie.ml / password123
+      </div>
+    </div>
+
+    <footer class="login-secure">
+      <i class="pi pi-shield"></i>
+      <span>Plateforme sécurisée par l'État du Mali</span>
+      <span class="flag-mini" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+    </footer>
+  </main>
+</div>

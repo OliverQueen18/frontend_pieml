@@ -1,0 +1,130 @@
+.mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--pie-border);
+    border-radius: 8px;
+    background: #f8fafc;
+    color: var(--pie-navy);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.active {
+      background: var(--pie-green);
+      border-color: var(--pie-green);
+      color: white;
+    }
+  }
+}
+
+.manual-form {
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--pie-navy);
+    margin-bottom: 0.35rem;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0.5rem;
+
+    input {
+      flex: 1;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid var(--pie-border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.92rem;
+
+      &:focus {
+        outline: none;
+        border-color: var(--pie-green);
+        box-shadow: 0 0 0 3px rgba(26, 171, 75, 0.12);
+      }
+    }
+  }
+}
+
+.scan-panel {
+  .qr-reader {
+    width: 100%;
+    min-height: 280px;
+    border: 1px dashed var(--pie-border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #0f172a;
+  }
+
+  .scan-status {
+    margin-top: 0.75rem;
+    color: var(--pie-green);
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+}
+
+.hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--pie-muted);
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+
+  &.alert-error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+  }
+}
+
+.result {
+  margin-top: 1.25rem;
+
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+
+    h2 {
+      font-size: 1.1rem;
+      color: var(--pie-primary);
+      margin: 0;
+    }
+  }
+
+  p {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .btn-block {
+    width: 100%;
+    margin-top: 0.75rem;
+  }
+}
+
+:host ::ng-deep .qr-reader video {
+  border-radius: 10px;
+}

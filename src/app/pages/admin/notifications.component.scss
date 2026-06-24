@@ -1,0 +1,56 @@
+@use './admin-page';
+@import '../../shared/dialog.scss';
+
+.date-range-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+
+  .date-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--pie-muted, #64748b);
+
+    input[type='date'],
+    select {
+      padding: 0.55rem 0.65rem;
+      border: 1px solid var(--pie-border, #e2e8f0);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &:focus {
+        outline: none;
+        border-color: var(--pie-green, #1aab4b);
+        box-shadow: 0 0 0 3px rgba(26, 171, 75, 0.12);
+      }
+    }
+
+    select {
+      min-width: 7.5rem;
+      cursor: pointer;
+    }
+  }
+
+  .period-filter select {
+    min-width: 6.5rem;
+  }
+}
+
+.date-range-hint {
+  font-weight: 400;
+  color: var(--pie-muted, #64748b);
+}
+
+@media (max-width: 640px) {
+  .checkbox-group {
+    grid-column: 1 / -1;
+  }
+}

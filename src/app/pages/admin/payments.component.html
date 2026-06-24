@@ -1,0 +1,166 @@
+<div class="admin-page">
+  <div class="page-header">
+    <h2>Gestion des paiements</h2>
+    <p>Suivez et gérez les paiements Trésor Pay liés aux dossiers d'immatriculation.</p>
+  </div>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input type="search" [(ngModel)]="searchQuery" placeholder="Rechercher par dossier, transaction, citoyen…" aria-label="Rechercher un paiement">
+    </div>
+    <div class="date-range-filters">
+      <label class="date-filter">
+        <span>Du</span>
+        <input type="date" [(ngModel)]="dateFrom" (ngModelChange)="onDateFilterChange()" aria-label="Date de début">
+      </label>
+      <label class="date-filter">
+        <span>Au</span>
+        <input type="date" [(ngModel)]="dateTo" (ngModelChange)="onDateFilterChange()" aria-label="Date de fin">
+      </label>
+      <label class="date-filter period-filter">
+        <span>Période</span>
+        <select [(ngModel)]="periodPreset" (ngModelChange)="onPeriodChange($event)" aria-label="Période">
+          @for (p of periodOptions; track p.value) {
+            <option [ngValue]="p.value">{{ p.label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="admin-card table-card">
+    <div class="results-meta">
+      {{ filteredPayments.length }} paiement(s)
+      @if (periodPreset === 'all') {
+        <span class="date-range-hint"> — toutes les périodes</span>
+      } @else if (dateFrom && dateTo) {
+        <span class="date-range-hint"> — {{ periodLabel() }} : du {{ formatDisplayDate(dateFrom) }} au {{ formatDisplayDate(dateTo) }}</span>
+      }
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>DOSSIER</th>
+            <th>CITOYEN</th>
+            <th>MONTANT</th>
+            <th>TRANSACTION</th>
+            <th>STATUT</th>
+            <th>DATE</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of filteredPayments; track p.id) {
+            <tr>
+              <td><code class="code-tag">{{ p.dossierReference }}</code></td>
+              <td>
+                <strong>{{ p.citizenName }}</strong>
+                <div class="sub-text">{{ p.citizenEmail }}</div>
+              </td>
+              <td><strong>{{ p.totalAmount | number:'1.0-0' }} FCFA</strong></td>
+              <td>{{ p.transactionId || '—' }}</td>
+              <td>
+                <span class="badge status" [class]="'status-' + statusClass(p.status)">
+                  {{ statusLabels[p.status] || p.status }}
+                </span>
+              </td>
+              <td>{{ p.paymentDate ? (p.paymentDate | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+              <td class="actions">
+                <button type="button" class="btn btn-sm btn-outline" (click)="openView(p)">Afficher</button>
+                <button type="button" class="btn btn-sm btn-outline" (click)="openEdit(p)">Modifier</button>
+                @if (canDelete(p)) {
+                  <button type="button" class="btn btn-sm btn-outline btn-danger-outline" (click)="remove(p)">Supprimer</button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="empty">Aucun paiement pour cette période.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (viewingPayment; as payment) {
+  <div class="dialog-backdrop" (click)="closeView()" role="presentation">
+    <div class="dialog dialog-md" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <div>
+          <h2>Paiement — {{ payment.dossierReference }}</h2>
+          <p>{{ payment.citizenName }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeView()" aria-label="Fermer"><i class="pi pi-times"></i></button>
+      </header>
+      <div class="detail-body">
+        <div class="detail-status">
+          <span class="badge status" [class]="'status-' + statusClass(payment.status)">
+            {{ statusLabels[payment.status] || payment.status }}
+          </span>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Email</span><span class="detail-value">{{ payment.citizenEmail }}</span></div>
+          <div class="detail-item"><span class="detail-label">Frais dossier</span><span class="detail-value">{{ payment.amount | number:'1.0-0' }} FCFA</span></div>
+          <div class="detail-item"><span class="detail-label">Frais service</span><span class="detail-value">{{ payment.serviceFee | number:'1.0-0' }} FCFA</span></div>
+          <div class="detail-item"><span class="detail-label">Total</span><span class="detail-value"><strong>{{ payment.totalAmount | number:'1.0-0' }} FCFA</strong></span></div>
+          <div class="detail-item"><span class="detail-label">Transaction</span><span class="detail-value">{{ payment.transactionId || '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Méthode</span><span class="detail-value">{{ payment.paymentMethod ? (methodLabels[payment.paymentMethod] || payment.paymentMethod) : '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Date paiement</span><span class="detail-value">{{ payment.paymentDate ? (payment.paymentDate | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" (click)="closeView()">Fermer</button>
+        <button type="button" class="btn btn-outline" (click)="openEditFromView()">Modifier</button>
+        @if (canDelete(payment)) {
+          <button type="button" class="btn btn-danger" (click)="remove(payment)">Supprimer</button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (showForm) {
+  <div class="dialog-backdrop" (click)="cancelForm()" role="presentation">
+    <div class="dialog dialog-md" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <div>
+          <h2>Modifier le paiement</h2>
+          <p>Corrigez le statut ou les informations de transaction.</p>
+        </div>
+        <button type="button" class="close-btn" (click)="cancelForm()" aria-label="Fermer"><i class="pi pi-times"></i></button>
+      </header>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid modal-form">
+        <div class="form-group">
+          <label for="pay-status">Statut</label>
+          <select id="pay-status" formControlName="status">
+            @for (s of statusOptions; track s) {
+              <option [value]="s">{{ statusLabels[s] }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="pay-method">Méthode</label>
+          <select id="pay-method" formControlName="paymentMethod">
+            <option value="">—</option>
+            @for (m of methodOptions; track m) {
+              <option [value]="m">{{ methodLabels[m] }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group full">
+          <label for="pay-tx">N° transaction</label>
+          <input id="pay-tx" formControlName="transactionId" placeholder="TP-XXXXXXXXXXXX">
+        </div>
+        <div class="form-group full modal-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

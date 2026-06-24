@@ -1,0 +1,318 @@
+<div class="admin-page">
+  <div class="page-header">
+    <h2>Centres d'immatriculation</h2>
+    <p>Gérez les centres où les citoyens prennent rendez-vous.</p>
+  </div>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        [(ngModel)]="searchQuery"
+        placeholder="Rechercher par nom, ville ou adresse…"
+        aria-label="Rechercher un centre">
+    </div>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">
+      <i class="pi pi-plus"></i> Nouveau centre
+    </button>
+  </div>
+
+  <div class="admin-card table-card">
+    <div class="results-meta">{{ filteredCenters.length }} centre(s)</div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Ville</th>
+            <th>Horaires</th>
+            <th>Capacité / jour</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of filteredCenters; track c.id) {
+            <tr [class.inactive-row]="!c.active">
+              <td>
+                <strong>{{ c.name }}</strong>
+                <div class="sub">{{ c.address || '—' }}</div>
+              </td>
+              <td>{{ c.city }}</td>
+              <td class="schedule">{{ formatSchedule(c) }}</td>
+              <td>{{ c.dailyCapacity }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="status-toggle"
+                  [class.active]="c.active"
+                  [disabled]="togglingId === c.id"
+                  [attr.aria-pressed]="c.active"
+                  [attr.aria-label]="(c.active ? 'Désactiver' : 'Activer') + ' ' + c.name"
+                  (click)="toggleActive(c)">
+                  <span class="status-toggle-track">
+                    <span class="status-toggle-thumb"></span>
+                  </span>
+                  <span class="status-toggle-label">{{ c.active ? 'Actif' : 'Inactif' }}</span>
+                </button>
+              </td>
+              <td class="actions">
+                <button type="button" class="btn btn-sm btn-outline" (click)="openView(c)">Afficher</button>
+                <button type="button" class="btn btn-sm btn-outline" (click)="openEdit(c)">Modifier</button>
+                <button type="button" class="btn btn-sm btn-outline" (click)="remove(c)">Supprimer</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty">
+                @if (searchQuery.trim()) {
+                  Aucun centre ne correspond à votre recherche.
+                } @else {
+                  Aucun centre enregistré.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showForm) {
+  <div class="dialog-backdrop" (click)="cancelForm()" role="presentation">
+    <div
+      class="dialog center-form-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="editingId ? 'edit-center-title' : 'create-center-title'"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header center-form-header">
+        <div class="center-form-intro">
+          <span class="center-form-icon" aria-hidden="true">
+            <i class="pi pi-building"></i>
+          </span>
+          <div>
+            <h2 [id]="editingId ? 'edit-center-title' : 'create-center-title'">
+              {{ editingId ? 'Modifier le centre' : 'Nouveau centre' }}
+            </h2>
+            <p>Informations, horaires d'ouverture et position géographique.</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn" (click)="cancelForm()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="center-form">
+        <div class="center-form-body">
+          <section class="form-section">
+            <h3 class="form-section-title">Informations générales</h3>
+            <div class="form-panel">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="center-name">Nom</label>
+                  <div class="field-control">
+                    <i class="pi pi-building field-icon" aria-hidden="true"></i>
+                    <input id="center-name" formControlName="name" placeholder="Hamdallaye">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="center-city">Ville</label>
+                  <div class="field-control">
+                    <i class="pi pi-map-marker field-icon" aria-hidden="true"></i>
+                    <input id="center-city" formControlName="city" placeholder="Bamako">
+                  </div>
+                </div>
+                <div class="form-group full">
+                  <label for="center-address">Adresse</label>
+                  <div class="field-control">
+                    <i class="pi pi-home field-icon" aria-hidden="true"></i>
+                    <input id="center-address" formControlName="address" placeholder="Rue, quartier…">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h3 class="form-section-title">Capacité et disponibilité</h3>
+            <div class="form-panel">
+              <div class="form-grid form-grid--3">
+                <div class="form-group">
+                  <label for="center-capacity">Capacité journalière</label>
+                  <div class="field-control">
+                    <i class="pi pi-users field-icon" aria-hidden="true"></i>
+                    <input id="center-capacity" type="number" formControlName="dailyCapacity" min="1">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="center-delay">Délai de traitement</label>
+                  <div class="field-control">
+                    <i class="pi pi-calendar field-icon" aria-hidden="true"></i>
+                    <input id="center-delay" type="number" formControlName="processingDelayDays" min="0">
+                  </div>
+                  <small class="hint">Jours ouvrés avant le 1<sup>er</sup> rendez-vous.</small>
+                </div>
+                <div class="form-group form-group--active">
+                  <span class="field-label">Statut</span>
+                  <label class="checkbox-card">
+                    <input type="checkbox" formControlName="active">
+                    <span>
+                      <strong>Centre actif</strong>
+                      <small>Visible pour la prise de rendez-vous</small>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h3 class="form-section-title">Horaires d'ouverture</h3>
+            <div class="form-panel">
+              <div class="form-group">
+                <span class="field-label">Jours ouverts</span>
+                <div class="day-chips">
+                  @for (d of weekDays; track d.value) {
+                    <button
+                      type="button"
+                      class="day-chip"
+                      [class.selected]="isDaySelected(d.value)"
+                      (click)="toggleDay(d.value)">
+                      {{ d.label }}
+                    </button>
+                  }
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="center-open">Heure d'ouverture</label>
+                  <div class="field-control">
+                    <i class="pi pi-clock field-icon" aria-hidden="true"></i>
+                    <input id="center-open" type="time" formControlName="openingTime">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="center-close">Heure de fermeture</label>
+                  <div class="field-control">
+                    <i class="pi pi-clock field-icon" aria-hidden="true"></i>
+                    <input id="center-close" type="time" formControlName="closingTime">
+                  </div>
+                </div>
+              </div>
+              @if (scheduleError) {
+                <span class="field-error">{{ scheduleError }}</span>
+              }
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h3 class="form-section-title">Localisation sur la carte</h3>
+            <div class="form-panel form-panel--map">
+              <app-osm-location-picker
+                [address]="mapAddress"
+                [latitude]="mapInitialLat"
+                [longitude]="mapInitialLng"
+                (locationSelected)="onLocationSelected($event)" />
+              @if (geoError) {
+                <span class="field-error">{{ geoError }}</span>
+              }
+            </div>
+          </section>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+            <i class="pi pi-check" aria-hidden="true"></i>
+            {{ editingId ? 'Enregistrer' : 'Créer le centre' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (viewingCenter; as center) {
+  <div class="dialog-backdrop" (click)="closeView()" role="presentation">
+    <div
+      class="dialog center-detail-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="view-center-title"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+        <div>
+          <h2 id="view-center-title">{{ center.name }}</h2>
+          <p>{{ center.city }} — Détail du centre d'immatriculation</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeView()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <div class="detail-body">
+        <div class="detail-status">
+          <span class="detail-badge" [class.active]="center.active">
+            {{ center.active ? 'Actif' : 'Inactif' }}
+          </span>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Ville</span>
+            <span class="detail-value">{{ center.city }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Adresse</span>
+            <span class="detail-value">{{ center.address || '—' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Capacité journalière</span>
+            <span class="detail-value">{{ center.dailyCapacity }} dossier(s) / jour</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Délai de traitement</span>
+            <span class="detail-value">{{ center.processingDelayDays ?? 3 }} jour(s) ouvré(s)</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Jours d'ouverture</span>
+            <span class="detail-value">{{ formatOpeningDays(center) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Horaires</span>
+            <span class="detail-value">
+              {{ toTimeInput(center.openingTime ?? '08:00') }} – {{ toTimeInput(center.closingTime ?? '17:00') }}
+            </span>
+          </div>
+          <div class="detail-item span-2">
+            <span class="detail-label">Coordonnées GPS</span>
+            <span class="detail-value">{{ formatCoords(center) }}</span>
+          </div>
+        </div>
+
+        @if (center.latitude != null && center.longitude != null) {
+          <div class="detail-map">
+            <app-osm-location-picker
+              [address]="viewMapAddress"
+              [latitude]="center.latitude"
+              [longitude]="center.longitude" />
+          </div>
+        }
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" (click)="closeView()">Fermer</button>
+        <button type="button" class="btn btn-primary" (click)="openEditFromView()">Modifier</button>
+      </div>
+    </div>
+  </div>
+}

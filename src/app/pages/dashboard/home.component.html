@@ -1,0 +1,130 @@
+@if (error) { <div class="alert alert-error">{{ error }}</div> }
+
+@if (stats) {
+  <div class="stats-row">
+    <div class="stat-card orange">
+      <span class="num">{{ stats.dossiersEnCours }}</span>
+      <span class="label">Dossiers en cours</span>
+    </div>
+    <div class="stat-card green">
+      <span class="num">{{ stats.dossiersValides }}</span>
+      <span class="label">Dossiers validés</span>
+    </div>
+    <div class="stat-card blue">
+      <span class="num">{{ stats.rendezVous }}</span>
+      <span class="label">Rendez-vous</span>
+    </div>
+    <div class="stat-card purple">
+      <span class="num">{{ stats.immatriculations }}</span>
+      <span class="label">Immatriculations</span>
+    </div>
+  </div>
+}
+
+<div class="dashboard-grid">
+  <div class="left-col">
+    @if (activeDossier) {
+      <div class="card active-dossier">
+        <h2>Mon dossier en cours</h2>
+        <div class="dossier-info">
+          <div><small>N° dossier</small><strong>{{ activeDossier.referenceNumber }}</strong></div>
+          <div><small>Engin</small><strong>{{ activeDossier.vehicle?.brand }} {{ activeDossier.vehicle?.model }}</strong></div>
+          <div><small>Date dépôt</small><strong>{{ activeDossier.createdAt | date:'dd/MM/yyyy' }}</strong></div>
+          <div><small>Statut</small><span class="badge" [class]="statusClass(activeDossier.status)">{{ statusLabel(activeDossier.status) }}</span></div>
+        </div>
+        <div class="dossier-actions">
+          <a [routerLink]="['/tableau-de-bord/dossier', activeDossier.id]" class="btn btn-primary">Voir le dossier</a>
+          @if (isDraft(activeDossier)) {
+            <button
+              type="button"
+              class="btn btn-outline btn-danger"
+              [disabled]="deletingId === activeDossier.id"
+              (click)="deleteDraft(activeDossier)">
+              {{ deletingId === activeDossier.id ? 'Suppression...' : 'Supprimer le brouillon' }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="card next-steps">
+        <h2>Prochaine étape</h2>
+        <ul class="doc-checklist">
+          @for (doc of activeDossier.documents; track doc.id) {
+            <li [class.done]="doc.status === 'UPLOADED' || doc.status === 'VALIDATED'">
+              <i class="pi" [class.pi-check-circle]="doc.status === 'UPLOADED'" [class.pi-circle]="doc.status === 'PENDING'"></i>
+              {{ doc.typeDocument.libelle }}
+              @if (!doc.typeDocument.obligatoire) { <small>(facultatif)</small> }
+              @if (doc.status === 'PENDING' && doc.typeDocument.obligatoire) { <span class="pending">À fournir</span> }
+            </li>
+          }
+        </ul>
+        @if (activeDossier.status === 'DRAFT') {
+          <div class="draft-actions">
+            <a routerLink="/tableau-de-bord/nouvelle-demande" class="btn btn-primary">Compléter mon dossier</a>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="card empty">
+        <h2>Aucun dossier en cours</h2>
+        <p>Commencez votre demande d'immatriculation dès maintenant.</p>
+        <a routerLink="/tableau-de-bord/nouvelle-demande" class="btn btn-primary">Nouvelle demande</a>
+      </div>
+    }
+
+    <div class="card history">
+      <h2>Historique de mes demandes</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>N° Dossier</th>
+            <th>Engin</th>
+            <th>Date</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of dossiers; track d.id) {
+            <tr>
+              <td>{{ d.referenceNumber }}</td>
+              <td>{{ d.vehicle?.brand }} {{ d.vehicle?.model }}</td>
+              <td>{{ d.createdAt | date:'dd/MM/yyyy' }}</td>
+              <td><span class="badge" [class]="statusClass(d.status)">{{ statusLabel(d.status) }}</span></td>
+              <td class="row-actions">
+                <a [routerLink]="['/tableau-de-bord/dossier', d.id]" title="Voir"><i class="pi pi-eye"></i></a>
+                @if (isDraft(d)) {
+                  <button
+                    type="button"
+                    class="icon-btn danger"
+                    title="Supprimer le brouillon"
+                    [disabled]="deletingId === d.id"
+                    (click)="deleteDraft(d, $event)">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="card notifications">
+      <h2>Notifications récentes</h2>
+      @for (n of notifications; track n.id) {
+        <div class="notif-item">
+          <i class="pi pi-bell"></i>
+          <div>
+            <p>{{ n.message }}</p>
+            <small>{{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}</small>
+          </div>
+        </div>
+      } @empty {
+        <p class="empty-notif">Aucune notification</p>
+      }
+    </div>
+  </div>
+</div>

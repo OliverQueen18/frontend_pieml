@@ -1,0 +1,312 @@
+<div class="admin-page">
+  <div class="page-header">
+    <h2>Gestion des tarifs</h2>
+    <p>Configurez les montants appliqués aux dossiers d'immatriculation.</p>
+  </div>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        [(ngModel)]="searchQuery"
+        placeholder="Rechercher par code, libellé ou description…"
+        aria-label="Rechercher un tarif">
+    </div>
+    @if (canManage()) {
+      <button type="button" class="btn btn-primary" (click)="openCreate()">
+        <i class="pi pi-plus"></i> Nouveau tarif
+      </button>
+    }
+  </div>
+
+  <div class="admin-card table-card">
+    <div class="results-meta">{{ filteredTariffs.length }} tarif(s)</div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ORDRE</th>
+            <th>CODE</th>
+            <th>LIBELLÉ</th>
+            <th>MONTANT</th>
+            <th>FRAIS DE SERVICE</th>
+            <th>TOTAL</th>
+            <th>STATUT</th>
+            <th>CRÉÉ LE</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of filteredTariffs; track t.id) {
+            <tr [class.inactive-row]="!t.actif">
+              <td>{{ t.ordre }}</td>
+              <td><code class="code-tag">{{ t.code }}</code></td>
+              <td class="cell-libelle">
+                <strong [attr.title]="t.libelle">{{ t.libelle }}</strong>
+                @if (t.description) {
+                  <div class="sub-text" [attr.title]="t.description">{{ t.description }}</div>
+                }
+              </td>
+              <td><strong>{{ t.amount | number:'1.0-0' }} FCFA</strong></td>
+              <td>{{ t.serviceFee | number:'1.0-0' }} FCFA</td>
+              <td><strong>{{ totalAmount(t) | number:'1.0-0' }} FCFA</strong></td>
+              <td>
+                @if (canManage()) {
+                  <button
+                    type="button"
+                    class="status-toggle"
+                    [class.active]="t.actif"
+                    [disabled]="togglingId === t.id"
+                    (click)="toggleActive(t)">
+                    <span class="status-toggle-track"><span class="status-toggle-thumb"></span></span>
+                    <span class="status-toggle-label">{{ t.actif ? 'Actif' : 'Inactif' }}</span>
+                  </button>
+                } @else {
+                  <span class="detail-badge" [class.active]="t.actif">{{ t.actif ? 'Actif' : 'Inactif' }}</span>
+                }
+              </td>
+              <td>{{ t.createdAt | date:'dd/MM/yyyy' }}</td>
+              <td class="actions">
+                <button
+                  type="button"
+                  class="btn-icon"
+                  (click)="openView(t)"
+                  aria-label="Afficher le tarif"
+                  title="Afficher">
+                  <i class="pi pi-eye" aria-hidden="true"></i>
+                </button>
+                @if (canManage()) {
+                  <button
+                    type="button"
+                    class="btn-icon"
+                    (click)="openEdit(t)"
+                    aria-label="Modifier le tarif"
+                    title="Modifier">
+                    <i class="pi pi-pencil" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-icon btn-icon-danger"
+                    [disabled]="removingId === t.id"
+                    (click)="remove(t)"
+                    aria-label="Supprimer le tarif"
+                    title="Supprimer">
+                    @if (removingId === t.id) {
+                      <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+                    } @else {
+                      <i class="pi pi-trash" aria-hidden="true"></i>
+                    }
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="9" class="empty">
+                @if (searchQuery.trim()) {
+                  Aucun tarif ne correspond à votre recherche.
+                } @else {
+                  Aucun tarif configuré.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (viewingTariff; as tariff) {
+  <div class="dialog-backdrop" (click)="closeView()" role="presentation">
+    <div
+      class="dialog dialog-md tariff-detail-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="view-tariff-title"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+        <div>
+          <h2 id="view-tariff-title">{{ tariff.libelle }}</h2>
+          <p>Tarif — code {{ tariff.code }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeView()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <div class="detail-body">
+        <div class="detail-status">
+          <span class="detail-badge" [class.active]="tariff.actif">
+            {{ tariff.actif ? 'Tarif actif' : 'Tarif inactif' }}
+          </span>
+          <span class="amount-badge">{{ totalAmount(tariff) | number:'1.0-0' }} FCFA</span>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Montant</span>
+            <span class="detail-value">{{ tariff.amount | number:'1.0-0' }} FCFA</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Frais de service</span>
+            <span class="detail-value">{{ tariff.serviceFee | number:'1.0-0' }} FCFA</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Total</span>
+            <span class="detail-value"><strong>{{ totalAmount(tariff) | number:'1.0-0' }} FCFA</strong></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Code</span>
+            <span class="detail-value"><code class="code-tag">{{ tariff.code }}</code></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Ordre d'affichage</span>
+            <span class="detail-value">{{ tariff.ordre }}</span>
+          </div>
+          <div class="detail-item span-2">
+            <span class="detail-label">Description</span>
+            <span class="detail-value">{{ tariff.description || '—' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Créé le</span>
+            <span class="detail-value">{{ tariff.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          @if (tariff.updatedAt) {
+            <div class="detail-item">
+              <span class="detail-label">Modifié le</span>
+              <span class="detail-value">{{ tariff.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" (click)="closeView()">Fermer</button>
+        @if (canManage()) {
+          <button type="button" class="btn btn-outline" (click)="openEditFromView()">Modifier</button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            [disabled]="removingId === tariff.id"
+            (click)="remove(tariff)">
+            {{ removingId === tariff.id ? 'Suppression…' : 'Supprimer' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (showForm) {
+  <div class="dialog-backdrop" (click)="cancelForm()" role="presentation">
+    <div
+      class="dialog tariff-form-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tariff-form-title"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header tariff-form-header">
+        <div class="tariff-form-intro">
+          <span class="tariff-form-icon" aria-hidden="true">
+            <i class="pi pi-wallet"></i>
+          </span>
+          <div>
+            <h2 id="tariff-form-title">{{ editingId ? 'Modifier le tarif' : 'Nouveau tarif' }}</h2>
+            <p>Définissez le montant, les frais de service et le libellé en FCFA.</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn" (click)="cancelForm()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="tariff-form">
+        <div class="tariff-form-body">
+          <div class="form-section">
+            <h3 class="form-section-title">Identification</h3>
+            <div class="form-panel">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="tariff-code">Code</label>
+                  <div class="field-control">
+                    <i class="pi pi-hashtag field-icon" aria-hidden="true"></i>
+                    <input id="tariff-code" formControlName="code" placeholder="REGISTRATION">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="tariff-ordre">Ordre</label>
+                  <div class="field-control">
+                    <i class="pi pi-sort-numeric-down field-icon" aria-hidden="true"></i>
+                    <input id="tariff-ordre" type="number" min="0" formControlName="ordre" placeholder="0">
+                  </div>
+                </div>
+                <div class="form-group full">
+                  <label for="tariff-label">Libellé</label>
+                  <div class="field-control">
+                    <i class="pi pi-tag field-icon" aria-hidden="true"></i>
+                    <input id="tariff-label" formControlName="libelle" placeholder="Frais d'immatriculation">
+                  </div>
+                </div>
+                <div class="form-group full">
+                  <label for="tariff-desc">Description</label>
+                  <div class="field-control field-control--textarea">
+                    <i class="pi pi-align-left field-icon field-icon--textarea" aria-hidden="true"></i>
+                    <textarea id="tariff-desc" formControlName="description" rows="3" placeholder="Description affichée aux citoyens…"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="form-section-title">Montants & statut</h3>
+            <div class="form-panel">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="tariff-amount">Montant (FCFA)</label>
+                  <div class="field-control">
+                    <i class="pi pi-money-bill field-icon" aria-hidden="true"></i>
+                    <input id="tariff-amount" type="number" min="0" step="1" formControlName="amount" placeholder="12000">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="tariff-service-fee">Frais de service (FCFA)</label>
+                  <div class="field-control">
+                    <i class="pi pi-money-bill field-icon" aria-hidden="true"></i>
+                    <input id="tariff-service-fee" type="number" min="0" step="1" formControlName="serviceFee" placeholder="0">
+                  </div>
+                  <p class="field-hint">0 autorisé si aucun frais de service.</p>
+                </div>
+                <div class="form-group full checkbox-group">
+                  <label class="checkbox-card">
+                    <input type="checkbox" formControlName="actif">
+                    <span>
+                      <strong>Actif</strong>
+                      <small>Appliqué aux nouveaux paiements et affiché sur la page d'accueil</small>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+            <i class="pi pi-check" aria-hidden="true"></i>
+            {{ editingId ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

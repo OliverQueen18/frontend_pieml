@@ -1,0 +1,13 @@
+<div class="faq-list">
+  @for (item of items; track item.question) {
+    <div class="faq-item" [class.open]="item.open">
+      <button type="button" class="faq-question" (click)="toggle(item)">
+        <span>{{ item.question }}</span>
+        <i class="pi" [class.pi-chevron-down]="!item.open" [class.pi-chevron-up]="item.open"></i>
+      </button>
+      @if (item.open) {
+        <div class="faq-answer">{{ item.answer }}</div>
+      }
+    </div>
+  }
+</div>

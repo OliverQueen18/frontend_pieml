@@ -1,0 +1,423 @@
+<div class="landing">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      
+      <a routerLink="/" class="logo">
+        <app-pieml-logo [height]="logoHeight" cssClass="logo-img" />
+      </a>
+
+      <nav class="nav">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+        <a href="#apropos" class="nav-link">À propos</a>
+        <a href="#procedure" class="nav-link">Procédures</a>
+        <a href="#tarifs" class="nav-link">Tarifs</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+        <button type="button" class="nav-link nav-link-btn" (click)="openContactDialog()">Contact</button>
+      </nav>
+
+      <div class="header-right">
+        <div class="header-actions">
+          @if (!auth.isLoggedIn()) {
+            <a routerLink="/connexion" class="btn btn-outline btn-sm">Se connecter</a>
+            <a routerLink="/inscription" class="btn btn-primary btn-sm">Créer un compte</a>
+          } @else {
+            <a [routerLink]="auth.homeRoute()" class="btn btn-primary btn-sm header-dashboard-btn">
+              <i class="pi pi-th-large"></i> {{ auth.dashboardLabel() }}
+            </a>
+            <button type="button" class="btn btn-outline btn-sm" (click)="logout()">Déconnexion</button>
+          }
+        </div>
+        <app-state-logo />
+      </div>
+
+      <button class="menu-toggle" aria-label="Menu" (click)="mobileMenuOpen = !mobileMenuOpen">
+        <i class="pi pi-bars"></i>
+      </button>
+    </div>
+
+    @if (mobileMenuOpen) {
+      <nav class="mobile-nav">
+        <div class="mobile-nav-top">
+          <app-state-logo [mobileVisible]="true" />
+        </div>
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+        <a href="#apropos">À propos</a>
+        <a href="#procedure">Procédures</a>
+        <a href="#tarifs">Tarifs</a>
+        <a href="#faq">FAQ</a>
+        <button type="button" class="mobile-nav-btn" (click)="openContactDialog()">Contact</button>
+        @if (!auth.isLoggedIn()) {
+          <a routerLink="/connexion">Se connecter</a>
+          <a routerLink="/inscription" class="mobile-cta">Créer un compte</a>
+        } @else {
+          <a [routerLink]="auth.homeRoute()" class="mobile-cta" (click)="mobileMenuOpen = false">
+            <i class="pi pi-th-large"></i> {{ auth.dashboardLabel() }}
+          </a>
+          <button type="button" class="mobile-nav-btn mobile-logout-btn" (click)="logout()">Déconnexion</button>
+        }
+      </nav>
+    }
+  </header>
+
+  <!-- Hero -->
+  <section class="hero" aria-roledescription="carousel">
+    <div class="hero-inner">
+      <div class="hero-grid">
+        @for (slide of [currentHeroSlide]; track activeHeroSlide) {
+        <div class="hero-content">
+          <span class="hero-badge">{{ slide.badge }}</span>
+          <h1>
+            {{ slide.title }}
+            <span class="highlight">{{ slide.highlight }}</span>
+          </h1>
+          <p class="hero-sub">{{ slide.subtitle }}</p>
+          <div class="hero-actions">
+            @if (isAnchorLink(slide.primaryCta.link)) {
+              <a [href]="slide.primaryCta.link" class="btn btn-primary btn-lg">
+                <i class="pi {{ slide.primaryCta.icon }}"></i>
+                {{ slide.primaryCta.label }}
+              </a>
+            } @else {
+              <a [routerLink]="slide.primaryCta.link" class="btn btn-primary btn-lg">
+                <i class="pi {{ slide.primaryCta.icon }}"></i>
+                {{ slide.primaryCta.label }}
+              </a>
+            }
+            @if (isAnchorLink(slide.secondaryCta.link)) {
+              <a [href]="slide.secondaryCta.link" class="btn btn-outline btn-lg">
+                {{ slide.secondaryCta.label }}
+              </a>
+            } @else if (isTrackLink(slide.secondaryCta.link)) {
+              <button type="button" class="btn btn-outline btn-lg" (click)="openTrackDialog()">
+                {{ slide.secondaryCta.label }}
+              </button>
+            } @else {
+              <a [routerLink]="slide.secondaryCta.link" class="btn btn-outline btn-lg">
+                {{ slide.secondaryCta.label }}
+              </a>
+            }
+          </div>
+          <p class="hero-tagline">
+            @for (word of slide.tagline; track $index; let i = $index) {
+              <span class="dot" [class.dot-green]="i % 2 === 0" [class.dot-red]="i % 2 !== 0"></span>
+              {{ word }}
+            }
+          </p>
+        </div>
+        }
+
+        <div class="hero-slider" aria-label="Navigation du carrousel">
+          <button type="button" class="hero-slider-btn" aria-label="Slide précédent" (click)="prevHeroSlide()">
+            <i class="pi pi-chevron-left hero-slider-prev-icon"></i>
+          </button>
+          <div class="hero-slider-track">
+            <span class="hero-slider-line" aria-hidden="true"></span>
+            @for (slide of heroSlides; track slide.badge; let i = $index) {
+              <button
+                type="button"
+                class="hero-slider-dot"
+                [class.active]="i === activeHeroSlide"
+                [attr.aria-label]="'Aller au slide ' + (i + 1) + ' : ' + slide.badge"
+                [attr.aria-current]="i === activeHeroSlide ? 'true' : null"
+                (click)="goToHeroSlide(i)">
+                <span class="hero-slider-label">{{ slide.badge }}</span>
+              </button>
+            }
+          </div>
+          <button type="button" class="hero-slider-btn" aria-label="Slide suivant" (click)="nextHeroSlide()">
+            <i class="pi pi-chevron-right hero-slider-next-icon"></i>
+          </button>
+        </div>
+
+        <div class="hero-visual-container">
+          @for (slide of heroSlides; track slide.badge; let i = $index) {
+            <div
+              class="hero-visual"
+              [class.active]="i === activeHeroSlide"
+              [attr.aria-hidden]="i !== activeHeroSlide">
+              @if (slide.visual === 'image') {
+                <img
+                  [src]="slide.image"
+                  [alt]="slide.imageAlt"
+                  class="hero-affiche">
+              } @else {
+                <div class="hero-visual-card" [class]="'accent-' + slide.accent">
+                  <div class="hero-visual-card-icon">
+                    <i class="pi {{ slide.icon }}"></i>
+                  </div>
+                  <h3>{{ slide.cardTitle }}</h3>
+                  <ul>
+                    @for (point of slide.cardPoints; track point) {
+                      <li><i class="pi pi-check"></i> {{ point }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="apropos">
+    <div class="container features-grid">
+      @for (f of features; track f.title) {
+        <div class="feature-item">
+          <div class="feature-icon" [class]="'icon-' + f.color">
+            <i class="pi {{ f.icon }}"></i>
+          </div>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.desc }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Sensibilisation — immatriculation & sécurité -->
+  <section class="awareness" id="securite">
+    <div class="container">
+      <div class="awareness-header">
+        <span class="awareness-badge">
+          <i class="pi pi-shield"></i> Contexte national
+        </span>
+        <h2>Immatriculer votre engin, c'est renforcer la sécurité au Mali</h2>
+        <p class="section-sub">
+          Face à l'insécurité et à la recrudescence des vols d'engins à deux roues,
+          l'immatriculation officielle protège les citoyens et facilite le travail des autorités.
+        </p>
+      </div>
+
+      <div class="awareness-callout">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        <p>
+          Un engin non immatriculé est plus difficile à identifier, plus exposé au vol
+          et plus risqué en cas de contrôle routier. PIEML vous permet de régulariser
+          votre situation simplement, en ligne.
+        </p>
+      </div>
+
+      <div class="awareness-grid">
+        @for (item of awarenessItems; track item.title) {
+          <article class="awareness-card" [class]="'accent-' + item.accent">
+            <div class="awareness-icon">
+              <i class="pi {{ item.icon }}"></i>
+            </div>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.desc }}</p>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats-bar" aria-live="polite">
+    <div class="container stats-grid">
+      <div class="stat">
+        <i class="pi pi-folder-open"></i>
+        <div>
+          <strong>
+            @if (!statsLoaded) {
+              <span class="stat-placeholder" aria-hidden="true">—</span>
+            } @else {
+              {{ stats.dossiersDeposes | number:'1.0-0':'fr-FR' }}@if (stats.dossiersDeposes > 0) {+}
+            }
+          </strong>
+          <span>Dossiers déposés</span>
+        </div>
+      </div>
+      <div class="stat">
+        <i class="pi pi-check-circle"></i>
+        <div>
+          <strong>
+            @if (!statsLoaded) {
+              <span class="stat-placeholder" aria-hidden="true">—</span>
+            } @else {
+              {{ stats.dossiersValides | number:'1.0-0':'fr-FR' }}@if (stats.dossiersValides > 0) {+}
+            }
+          </strong>
+          <span>Dossiers validés</span>
+        </div>
+      </div>
+      <div class="stat">
+        <i class="pi pi-id-card"></i>
+        <div>
+          <strong>
+            @if (!statsLoaded) {
+              <span class="stat-placeholder" aria-hidden="true">—</span>
+            } @else {
+              {{ stats.immatriculations | number:'1.0-0':'fr-FR' }}@if (stats.immatriculations > 0) {+}
+            }
+          </strong>
+          <span>Immatriculations</span>
+        </div>
+      </div>
+      <div class="stat">
+        <i class="pi pi-star-fill"></i>
+        <div>
+          <strong>
+            @if (!statsLoaded) {
+              <span class="stat-placeholder" aria-hidden="true">—</span>
+            } @else {
+              {{ stats.satisfactionRate }}%
+            }
+          </strong>
+          <span>Taux de satisfaction</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="how-it-works" id="procedure">
+    <div class="container">
+      <h2>Comment ça marche ?</h2>
+      <p class="section-sub">Un parcours simple en 6 étapes pour immatriculer votre engin</p>
+      <div class="steps-track">
+        @for (step of steps; track step.num; let last = $last) {
+          <div class="step-item">
+            <div class="step-icon-wrap">
+              <i class="pi {{ step.icon }}"></i>
+              <span class="step-badge">{{ step.num }}</span>
+            </div>
+            <h4>{{ step.title }}</h4>
+            <p>{{ step.desc }}</p>
+          </div>
+          @if (!last) {
+            <div class="step-connector" aria-hidden="true"></div>
+          }
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Preview parcours (aperçu maquette) -->
+  <section class="preview-section">
+    <div class="container">
+      <h2>Aperçu du parcours en ligne</h2>
+      <p class="section-sub">Déclarez, téléversez, payez et planifiez — le tout depuis votre espace</p>
+
+      <div class="preview-grid">
+        <div class="preview-card">
+          <div class="preview-stepper">
+            @for (s of previewSteps; track s; let i = $index) {
+              <span [class.active]="i === 0">{{ s }}</span>
+            }
+          </div>
+          <h3>Nouvelle demande</h3>
+          <div class="mock-form">
+            <div class="mock-field"><label>Marque</label><div class="mock-input">Yamaha</div></div>
+            <div class="mock-field"><label>Modèle</label><div class="mock-input">XTZ 125</div></div>
+            <div class="mock-field"><label>Cylindrée</label><div class="mock-input">125 cc</div></div>
+            <div class="mock-field"><label>N° châssis</label><div class="mock-input">••••••••</div></div>
+          </div>
+        </div>
+
+        <div class="preview-card">
+          <div class="preview-stepper">
+            @for (s of previewSteps; track s; let i = $index) {
+              <span [class.active]="i === 1">{{ s }}</span>
+            }
+          </div>
+          <h3>Téléversement des documents</h3>
+          <div class="mock-docs">
+            <div class="mock-doc done"><i class="pi pi-check-circle"></i> Carte NINA <small>carte_nina.pdf</small></div>
+            <div class="mock-doc done"><i class="pi pi-check-circle"></i> Facture d'achat <small>facture.pdf</small></div>
+            <div class="mock-doc done"><i class="pi pi-check-circle"></i> Photo engin <small>photo.jpg</small></div>
+            <div class="mock-doc pending"><i class="pi pi-upload"></i> Déclaration douane <small>Facultatif</small></div>
+          </div>
+        </div>
+
+        <div class="preview-card">
+          <div class="preview-stepper">
+            @for (s of previewSteps; track s; let i = $index) {
+              <span [class.active]="i === 2">{{ s }}</span>
+            }
+          </div>
+          <h3>Paiement</h3>
+          <div class="mock-payment">
+            <div class="mock-row total"><span>Frais d'immatriculation (tous types d'engins)</span><strong>{{ totalFee | number:'1.0-0':'fr-FR' }} FCFA</strong></div>
+            <div class="mock-tresor"><i class="pi pi-shield"></i> Trésor Pay</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-cta">
+        <a routerLink="/inscription" class="btn btn-primary btn-lg">Démarrer ma demande</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tarifs -->
+  <section class="tarifs" id="tarifs">
+    <div class="container">
+      <h2>Tarifs</h2>
+      <p class="section-sub">Tarif unique pour tous types d'engins à deux roues</p>
+      <div class="tarif-card">
+        @for (t of displayTariffs; track t.id) {
+          <div class="tarif-row">
+            <span>{{ t.libelle }}</span>
+            <strong>{{ t.amount | number:'1.0-0':'fr-FR' }} FCFA</strong>
+          </div>
+          @if (t.serviceFee > 0) {
+            <div class="tarif-row">
+              <span>Frais de service</span>
+              <strong>{{ t.serviceFee | number:'1.0-0':'fr-FR' }} FCFA</strong>
+            </div>
+          }
+        } @empty {
+          <div class="tarif-row">
+            <span>Frais d'immatriculation</span>
+            <strong>{{ registrationFee | number:'1.0-0':'fr-FR' }} FCFA</strong>
+          </div>
+          @if (serviceFee > 0) {
+            <div class="tarif-row">
+              <span>Frais de service</span>
+              <strong>{{ serviceFee | number:'1.0-0':'fr-FR' }} FCFA</strong>
+            </div>
+          }
+        }
+        <div class="tarif-row total">
+          <span>Total à payer</span>
+          <strong>{{ totalFee | number:'1.0-0':'fr-FR' }} FCFA</strong>
+        </div>
+        <p class="tarif-note">Motos, scooters, tricycles et engins similaires — même tarif forfaitaire.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq-section" id="faq">
+    <div class="container">
+      <h2>Questions fréquentes</h2>
+      <p class="section-sub">Trouvez rapidement des réponses sur l'immatriculation de votre engin au Mali.</p>
+      <app-faq-accordion />
+      <div class="faq-contact-cta">
+        <p>Vous ne trouvez pas la réponse à votre question ?</p>
+        <button type="button" class="btn btn-outline" (click)="openContactDialog()">Nous contacter</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <app-pieml-logo [height]="56" cssClass="footer-logo" alt="PIEML" />
+      <div class="footer-tricolor" aria-hidden="true">
+        <span class="c-green"></span><span class="c-yellow"></span><span class="c-red"></span>
+      </div>
+      <p class="footer-title">Plateforme d'Immatriculation des Engins du Mali</p>
+      <p class="footer-sub">République du Mali · Ministère des Transports et des Infrastructures</p>
+      <p class="footer-copy">&copy; {{ currentYear }} PIEML — Tous droits réservés developpé par <a href="https://olive-services.net"> Olive Services </a></p>
+    </div>
+  </footer>
+
+  <app-track-dossier-dialog
+    readerId="landing-track-qr-reader"
+    [showOpenDossierButton]="false" />
+
+  <app-contact-dialog />
+</div>

@@ -1,0 +1,39 @@
+.track-page {
+  padding: 3rem 0;
+  min-height: 100vh;
+  background: var(--pie-bg);
+}
+
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.back {
+  color: var(--pie-muted);
+  font-size: 0.9rem;
+
+  &:hover { color: var(--pie-navy); }
+}
+
+h1 {
+  margin: 1rem 0 0.35rem;
+  color: var(--pie-primary);
+}
+
+.subtitle {
+  color: var(--pie-muted);
+  margin-bottom: 1.75rem;
+}
+
+.search-card {
+  padding: 1.5rem;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--pie-shadow);
+  border: 1px solid var(--pie-border);
+}

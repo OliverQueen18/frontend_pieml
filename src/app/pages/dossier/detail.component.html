@@ -1,0 +1,208 @@
+@if (dossier) {
+  <a routerLink="/tableau-de-bord" class="back">← Retour</a>
+  <div class="detail-grid">
+    <div class="card main-card">
+      <div class="header-row">
+        <h1>{{ dossier.referenceNumber }}</h1>
+        <span class="badge badge-blue">{{ statusLabel(dossier.status) }}</span>
+      </div>
+
+      @if (dossier.vehicle) {
+        <h2>Véhicule</h2>
+        <div class="info-grid">
+          <div><small>Type d'engin</small><strong>{{ dossier.vehicle.vehicleType || '—' }}</strong></div>
+          <div><small>Marque / Modèle</small><strong>{{ dossier.vehicle.brand }} {{ dossier.vehicle.model }}</strong></div>
+          <div><small>Châssis</small><strong>{{ dossier.vehicle.chassisNumber }}</strong></div>
+          <div><small>Moteur</small><strong>{{ dossier.vehicle.engineNumber || '—' }}</strong></div>
+          <div><small>Couleur / Année</small><strong>{{ dossier.vehicle.color }} — {{ dossier.vehicle.year }}</strong></div>
+        </div>
+      }
+
+      <h2>Documents</h2>
+      <div class="doc-grid">
+        @for (doc of dossier.documents; track doc.id) {
+          <article class="doc-card" [class.doc-card--empty]="!hasFile(doc)">
+            <div class="doc-card-top">
+              <div class="doc-card-icon" aria-hidden="true">
+                <i class="pi {{ documentIcon(doc) }}"></i>
+              </div>
+              <div class="doc-card-body">
+                <strong>
+                  {{ doc.typeDocument.libelle }}
+                  @if (!doc.typeDocument.obligatoire) { <small>(facultatif)</small> }
+                </strong>
+                <span class="doc-file-name" [attr.title]="doc.fileName || ''">
+                  {{ doc.fileName || 'Non téléversé' }}
+                </span>
+              </div>
+            </div>
+            <div class="doc-card-footer">
+              <div class="doc-card-meta">
+                <span class="doc-status" [class]="documentStatusClass(doc.status)">
+                  {{ documentStatusLabels[doc.status] || (doc.status === 'UPLOADED' ? 'Fourni' : 'À fournir') }}
+                </span>
+                @if (doc.fileSize) {
+                  <span class="doc-size">{{ formatFileSize(doc.fileSize) }}</span>
+                }
+              </div>
+              <button
+                type="button"
+                class="btn-icon"
+                [disabled]="!hasFile(doc) || previewLoading"
+                (click)="openDocument(doc)"
+                [attr.aria-label]="'Visualiser ' + doc.typeDocument.libelle"
+                [attr.title]="hasFile(doc) ? 'Visualiser le document' : 'Document non disponible'">
+                <i class="pi pi-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+
+      @if (dossier.payment) {
+        <h2>Paiement</h2>
+        <p>Total : <strong>{{ dossier.payment.totalAmount | number }} FCFA</strong> — {{ dossier.payment.status }}</p>
+      }
+
+      @if (canDeclare()) {
+        <section class="declaration-section">
+          <h2>Déclaration de situation</h2>
+          <p class="declaration-intro">
+            Votre engin est immatriculé. Vous pouvez déclarer qu'il a été volé, perdu ou vendu en joignant une pièce justificative.
+          </p>
+          @if (declareError) {
+            <div class="alert alert-error">{{ declareError }}</div>
+          }
+          <div class="declaration-form">
+            <div class="form-group">
+              <label>Type de déclaration *</label>
+              <select [(ngModel)]="selectedDeclarationType" name="declarationType">
+                <option [ngValue]="null">Sélectionner</option>
+                @for (type of declarationTypes; track type) {
+                  <option [ngValue]="type">{{ declarationLabel(type) }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Pièce justificative *</label>
+              <input type="file" accept="image/*,.pdf" (change)="onDeclarationFileSelected($event)">
+              <small class="field-hint">Déclaration de vol, certificat de cession, etc. (PDF ou image)</small>
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="declareLoading || !selectedDeclarationType || !declarationFile"
+              (click)="submitDeclaration()">
+              {{ declareLoading ? 'Enregistrement...' : 'Enregistrer la déclaration' }}
+            </button>
+          </div>
+        </section>
+      }
+
+      @if (hasDeclaration() && dossier.vehicleDeclaration; as declaration) {
+        <section class="declaration-summary">
+          <h2>Déclaration enregistrée</h2>
+          <div class="declaration-info">
+            <p><strong>Type :</strong> {{ declarationLabel(declaration.declarationType) }}</p>
+            <p><strong>Date :</strong> {{ declaration.declaredAt | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p><strong>Justificatif :</strong> {{ declaration.fileName }}</p>
+          </div>
+          <button type="button" class="btn btn-outline" (click)="openDeclarationFile()">
+            <i class="pi pi-eye"></i> Voir la pièce justificative
+          </button>
+        </section>
+      }
+
+      @if (dossier.appointment) {
+        <h2>Rendez-vous</h2>
+        <div class="appointment-card">
+          <div class="appointment-info">
+            <p class="appointment-title">
+              <i class="pi pi-building" aria-hidden="true"></i>
+              <strong>{{ dossier.appointment.centerCity }} — {{ dossier.appointment.centerName }}</strong>
+            </p>
+            @if (dossier.appointment.centerAddress) {
+              <p class="appointment-address">
+                <i class="pi pi-map-marker" aria-hidden="true"></i>
+                {{ dossier.appointment.centerAddress }}
+              </p>
+            }
+            <p class="appointment-datetime">
+              <i class="pi pi-calendar" aria-hidden="true"></i>
+              {{ dossier.appointment.appointmentDate | date:'dd/MM/yyyy' }}
+              à {{ dossier.appointment.appointmentTime }}
+            </p>
+          </div>
+          <app-osm-map-view
+            [latitude]="dossier.appointment.centerLatitude ?? null"
+            [longitude]="dossier.appointment.centerLongitude ?? null"
+            [address]="centerMapQuery(dossier.appointment)"
+            height="240px" />
+          @if (centerMapLink(dossier.appointment); as mapLink) {
+            <a
+              class="map-open-link"
+              [href]="mapLink"
+              target="_blank"
+              rel="noopener noreferrer">
+              <i class="pi pi-external-link" aria-hidden="true"></i>
+              Ouvrir la carte
+            </a>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="card qr-card">
+      <h2>QR code de suivi</h2>
+      <p class="qr-intro">Scannez ce code pour suivre l'avancement de votre dossier.</p>
+      <app-dossier-qr [reference]="dossier.referenceNumber" [size]="200" [showDownload]="true" />
+    </div>
+  </div>
+}
+
+@if (previewDoc || previewIsDeclaration) {
+  <div class="dialog-backdrop" (click)="closePreview()" role="presentation">
+    <div
+      class="dialog doc-preview-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="doc-preview-title"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+        <div>
+          <h2 id="doc-preview-title">{{ previewTitle() }}</h2>
+          <p>{{ previewFileName() }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closePreview()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <div class="doc-preview-body">
+        @if (previewLoading) {
+          <div class="doc-preview-loading">
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+            <span>Chargement du document…</span>
+          </div>
+        } @else if (previewError) {
+          <div class="alert alert-error">{{ previewError }}</div>
+        } @else if (previewUrl) {
+          @if (isImagePreview()) {
+            <img [src]="previewUrl" [alt]="previewFileName() || 'Document'" class="doc-preview-image">
+          } @else if (isPdfPreview()) {
+            <iframe [src]="previewUrl" class="doc-preview-frame" [title]="previewFileName() || 'Document PDF'"></iframe>
+          } @else {
+            <div class="doc-preview-fallback">
+              <i class="pi pi-download" aria-hidden="true"></i>
+              <p>Aperçu non disponible pour ce type de fichier.</p>
+              <a [href]="previewUrl" [download]="previewFileName() || 'document'" class="btn btn-primary">
+                Télécharger le fichier
+              </a>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+}

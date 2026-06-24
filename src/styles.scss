@@ -1,0 +1,158 @@
+@import 'primeicons/primeicons.css';
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Charte PIEML — couleurs du logo */
+  --pie-green: #1aab4b;
+  --pie-green-dark: #158f3e;
+  --pie-yellow: #f4c812;
+  --pie-red: #d71920;
+  --pie-navy: #1a3352;
+  --pie-navy-dark: #122238;
+  --pie-black: #1a1a1a;
+
+  /* Alias compatibles */
+  --pie-primary: var(--pie-navy);
+  --pie-primary-dark: var(--pie-navy-dark);
+  --pie-accent: var(--pie-green);
+  --pie-accent-hover: var(--pie-green-dark);
+
+  --pie-bg: #f5f7fa;
+  --pie-bg-soft: #eef2f7;
+  --pie-text: #2c3e50;
+  --pie-muted: #64748b;
+  --pie-white: #ffffff;
+  --pie-border: #e2e8f0;
+  --pie-shadow: 0 4px 24px rgba(26, 51, 82, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--pie-text);
+  background: var(--pie-white);
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, .btn {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  background: var(--pie-green);
+  color: white;
+  box-shadow: 0 2px 8px rgba(26, 171, 75, 0.25);
+}
+
+.btn-primary:hover {
+  background: var(--pie-green-dark);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--pie-navy);
+  color: var(--pie-navy);
+}
+
+.btn-outline:hover {
+  background: rgba(26, 51, 82, 0.04);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.card {
+  background: var(--pie-white);
+  border-radius: 12px;
+  box-shadow: var(--pie-shadow);
+  padding: 1.5rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-orange { background: #fdebd0; color: #d68910; }
+.badge-green { background: #d5f5e3; color: #1e8449; }
+.badge-blue { background: #d6eaf8; color: #1a5276; }
+.badge-red { background: #fadbd8; color: #c0392b; }
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--pie-border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--pie-green);
+  box-shadow: 0 0 0 3px rgba(26, 171, 75, 0.12);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.alert-error { background: #fadbd8; color: #922b21; }
+.alert-success { background: #d5f5e3; color: #1e8449; }
+.alert-info { background: #d6eaf8; color: #1a5276; }
