@@ -67,6 +67,8 @@ export const routes: Routes = [
 
       { path: 'citoyens', canActivate: [permissionGuard(PERMISSIONS.CITIZENS_VIEW)], loadComponent: () => import('./pages/admin/citizens.component').then(m => m.AdminCitizensComponent) },
 
+      { path: 'reclamations-profil', canActivate: [permissionGuard(PERMISSIONS.CITIZENS_VIEW)], loadComponent: () => import('./pages/admin/profile-change-requests.component').then(m => m.AdminProfileChangeRequestsComponent) },
+
       { path: 'utilisateurs', canActivate: [permissionGuard(PERMISSIONS.USERS_VIEW)], loadComponent: () => import('./pages/admin/users.component').then(m => m.AdminUsersComponent) },
 
       { path: 'centres', canActivate: [permissionGuard(PERMISSIONS.CENTERS_VIEW)], loadComponent: () => import('./pages/admin/centers.component').then(m => m.AdminCentersComponent) },
@@ -82,6 +84,8 @@ export const routes: Routes = [
       { path: 'notifications', canActivate: [permissionGuard(PERMISSIONS.NOTIFICATIONS_VIEW)], loadComponent: () => import('./pages/admin/notifications.component').then(m => m.AdminNotificationsComponent) },
 
       { path: 'paiements', canActivate: [permissionGuard(PERMISSIONS.PAYMENTS_VIEW)], loadComponent: () => import('./pages/admin/payments.component').then(m => m.AdminPaymentsComponent) },
+
+      { path: 'situation-recettes', canActivate: [permissionGuard(PERMISSIONS.PAYMENTS_VIEW)], loadComponent: () => import('./pages/admin/revenue-dashboard.component').then(m => m.AdminRevenueDashboardComponent) },
 
       { path: 'tarifs', canActivate: [permissionGuard(PERMISSIONS.TARIFFS_VIEW)], loadComponent: () => import('./pages/admin/tariffs.component').then(m => m.AdminTariffsComponent) }
 

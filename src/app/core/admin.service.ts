@@ -7,13 +7,15 @@ import {
   AdminDossierSummary,
   AdminNotificationDto,
   AdminPaymentDto,
+  AdminProfileChangeRequestDto,
   AdminRoleDto,
   AdminTariffDto,
   AdminUserDto,
   CenterDto,
   DossierDto,
   TypeDocumentDto,
-  VehicleLookupDto
+  VehicleLookupDto,
+  CenterAvailabilityDto
 } from '../models';
 import { PermissionDto } from './permissions';
 
@@ -56,6 +58,26 @@ export class AdminService {
     return this.api.post<DossierDto>(`/admin/dossiers/${id}/validate`, {});
   }
 
+  confirmAppointment(id: number, data: { centerId: number; appointmentDate: string; appointmentTime: string }) {
+    return this.api.post<DossierDto>(`/admin/dossiers/${id}/confirm-appointment`, data);
+  }
+
+  startImmatriculation(id: number) {
+    return this.api.post<DossierDto>(`/admin/dossiers/${id}/start-immatriculation`, {});
+  }
+
+  completeImmatriculation(id: number, registrationNumber: string) {
+    return this.api.post<DossierDto>(`/admin/dossiers/${id}/complete-immatriculation`, { registrationNumber });
+  }
+
+  cancelImmatriculation(id: number, reason: string) {
+    return this.api.post<DossierDto>(`/admin/dossiers/${id}/cancel-immatriculation`, { reason });
+  }
+
+  getCenterAvailability(centerId: number) {
+    return this.api.get<CenterAvailabilityDto>(`/admin/centers/${centerId}/availability`);
+  }
+
   rejectDossier(id: number, reason: string) {
     return this.api.post<DossierDto>(`/admin/dossiers/${id}/reject`, { reason });
   }
@@ -84,12 +106,41 @@ export class AdminService {
     return this.api.delete<DossierDto>(`/admin/dossiers/${dossierId}/documents/${documentId}`);
   }
 
+  savePlateDelivery(dossierId: number, formData: FormData) {
+    return this.api.upload<DossierDto>(`/admin/dossiers/${dossierId}/remise-plaque`, formData);
+  }
+
+  getPlateDeliveryFile(dossierId: number) {
+    return this.api.getBlob(`/admin/dossiers/${dossierId}/remise-plaque/file`);
+  }
+
   listCitizens() {
     return this.api.get<AdminCitizenDto[]>(`/admin/citizens`);
   }
 
   deleteCitizen(id: number) {
     return this.api.delete<void>(`/admin/citizens/${id}`);
+  }
+
+  listProfileChangeRequests(status?: string) {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    return this.api.get<AdminProfileChangeRequestDto[]>(`/admin/profile-change-requests${query}`);
+  }
+
+  getProfileChangeRequestsPendingCount() {
+    return this.api.get<{ count: number }>('/admin/profile-change-requests/pending-count');
+  }
+
+  getProfileChangeRequestFile(id: number) {
+    return this.api.getBlob(`/admin/profile-change-requests/${id}/file`);
+  }
+
+  approveProfileChangeRequest(id: number) {
+    return this.api.post<AdminProfileChangeRequestDto>(`/admin/profile-change-requests/${id}/approve`, {});
+  }
+
+  rejectProfileChangeRequest(id: number, reason?: string) {
+    return this.api.post<AdminProfileChangeRequestDto>(`/admin/profile-change-requests/${id}/reject`, { reason });
   }
 
   listUsers() {

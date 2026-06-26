@@ -1,69 +1,151 @@
-<div class="account-page">
+<div class="account-page profile-page">
   <div class="page-header">
     <h2>Mon profil</h2>
-    <p>Mettez à jour vos informations personnelles et votre adresse.</p>
+    <p>Consultez vos informations. Pour toute modification, soumettez une réclamation avec pièce justificative.</p>
   </div>
 
   @if (loading) {
     <div class="account-card">Chargement…</div>
   } @else {
     @if (error) { <div class="alert alert-error">{{ error }}</div> }
-    @if (success) { <div class="alert alert-success">{{ success }}</div> }
 
-    <form class="account-card" [formGroup]="form" (ngSubmit)="submit()">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Prénom</label>
-          <input formControlName="firstName" (input)="toUppercase('firstName')">
-          @if (form.controls.firstName.touched && form.controls.firstName.invalid) {
-            <span class="error">Prénom obligatoire</span>
+    <div class="profile-layout">
+      <section class="account-card profile-panel">
+        <header class="panel-header">
+          <h3>Mes informations</h3>
+          <p class="panel-note">Lecture seule — modifiable uniquement via réclamation.</p>
+        </header>
+
+        <div class="form-grid" [formGroup]="profileForm">
+          <div class="form-group">
+            <label>Prénom</label>
+            <input formControlName="firstName" readonly>
+          </div>
+          <div class="form-group">
+            <label>Nom</label>
+            <input formControlName="lastName" readonly>
+          </div>
+          <div class="form-group full">
+            <label>NINA</label>
+            <input formControlName="nina" readonly>
+          </div>
+          <div class="form-group">
+            <label>Téléphone</label>
+            <input formControlName="phone" readonly>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input formControlName="email" readonly>
+          </div>
+          <div class="form-group full">
+            <label>Adresse</label>
+            <input formControlName="address" readonly>
+          </div>
+          <div class="form-group full profile-map">
+            <app-osm-location-picker
+              [address]="profileForm.controls.address.value ?? ''"
+              [latitude]="profileForm.controls.latitude.value"
+              [longitude]="profileForm.controls.longitude.value" />
+          </div>
+        </div>
+      </section>
+
+      <section class="account-card profile-panel">
+        <header class="panel-header">
+          <h3>Réclamation de modification</h3>
+          <p class="panel-note">Indiquez le champ à modifier, la nouvelle valeur, le motif et joignez une pièce justificative.</p>
+        </header>
+
+        @if (claimError) { <div class="alert alert-error">{{ claimError }}</div> }
+        @if (claimSuccess) { <div class="alert alert-success">{{ claimSuccess }}</div> }
+
+        <form [formGroup]="claimForm" (ngSubmit)="submitClaim()">
+          <div class="form-group full">
+            <label for="claim-field">Champ à modifier</label>
+            <select id="claim-field" formControlName="field" (change)="onFieldChange()">
+              <option value="">Sélectionner…</option>
+              @for (f of fieldOptions; track f) {
+                <option [value]="f">{{ fieldLabels[f] }}</option>
+              }
+            </select>
+            @if (claimForm.controls.field.touched && claimForm.controls.field.invalid) {
+              <span class="error">Sélectionnez un champ</span>
+            }
+          </div>
+
+          @if (selectedField) {
+            <div class="form-group full">
+              <label for="claim-value">Nouvelle valeur</label>
+              @if (isAddressField) {
+                <input id="claim-value" formControlName="requestedValue" placeholder="Quartier, commune, ville">
+              } @else if (selectedField === 'EMAIL') {
+                <input id="claim-value" type="email" formControlName="requestedValue" placeholder="exemple@email.ml">
+              } @else if (selectedField === 'PHONE') {
+                <input id="claim-value" type="tel" formControlName="requestedValue" placeholder="+22370123456">
+              } @else if (selectedField === 'NINA') {
+                <input id="claim-value" formControlName="requestedValue" maxlength="15" placeholder="15 caractères alphanumériques">
+              } @else {
+                <input id="claim-value" formControlName="requestedValue" placeholder="Nouvelle valeur">
+              }
+              @if (claimForm.controls.requestedValue.touched && claimForm.controls.requestedValue.invalid) {
+                <span class="error">Valeur invalide ou obligatoire</span>
+              }
+            </div>
+
+            @if (isAddressField) {
+              <div class="form-group full">
+                <app-osm-location-picker
+                  [address]="mapAddress"
+                  (locationSelected)="onClaimLocationSelected($event)" />
+                @if (geoError) { <span class="error">{{ geoError }}</span> }
+              </div>
+            }
+
+            <div class="form-group full">
+              <label for="claim-reason">Motif de la demande</label>
+              <textarea id="claim-reason" formControlName="reason" rows="4"
+                placeholder="Expliquez pourquoi vous demandez cette modification…"></textarea>
+              @if (claimForm.controls.reason.touched && claimForm.controls.reason.invalid) {
+                <span class="error">Motif obligatoire (10 caractères minimum)</span>
+              }
+            </div>
+
+            <div class="form-group full">
+              <label for="claim-file">Pièce justificative *</label>
+              <input id="claim-file" type="file" accept="image/*,.pdf" (change)="onAttachmentSelected($event)">
+              <span class="hint">PDF ou image (JPG, PNG). Document officiel justifiant la modification.</span>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" [disabled]="submitting || claimForm.invalid || !attachment">
+                {{ submitting ? 'Envoi…' : 'Soumettre la réclamation' }}
+              </button>
+            </div>
           }
-        </div>
-        <div class="form-group">
-          <label>Nom</label>
-          <input formControlName="lastName" (input)="toUppercase('lastName')">
-          @if (form.controls.lastName.touched && form.controls.lastName.invalid) {
-            <span class="error">Nom obligatoire</span>
-          }
-        </div>
-        <div class="form-group full">
-          <label>NINA</label>
-          <input formControlName="nina" readonly>
-          <span class="hint">Le NINA ne peut pas être modifié après inscription.</span>
-        </div>
-        <div class="form-group">
-          <label>Téléphone</label>
-          <input formControlName="phone" placeholder="+22370123456">
-          @if (form.controls.phone.touched && form.controls.phone.invalid) {
-            <span class="error">Numéro invalide</span>
-          }
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" formControlName="email">
-          @if (form.controls.email.touched && form.controls.email.invalid) {
-            <span class="error">Email invalide</span>
-          }
-        </div>
-        <div class="form-group full">
-          <label>Adresse</label>
-          <input formControlName="address" placeholder="Quartier, commune, ville">
-          @if (form.controls.address.touched && form.controls.address.invalid) {
-            <span class="error">Adresse obligatoire</span>
-          }
-        </div>
-        <div class="form-group full">
-          <app-osm-location-picker
-            [address]="form.controls.address.value ?? ''"
-            (locationSelected)="onLocationSelected($event)" />
-          @if (geoError) { <span class="error">{{ geoError }}</span> }
-        </div>
-      </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary" [disabled]="saving || form.invalid">
-          {{ saving ? 'Enregistrement…' : 'Enregistrer les modifications' }}
-        </button>
-      </div>
-    </form>
+        </form>
+
+        @if (requests.length) {
+          <div class="requests-block">
+            <h4>Mes réclamations</h4>
+            <ul class="requests-list">
+              @for (r of requests; track r.id) {
+                <li>
+                  <div class="request-head">
+                    <strong>{{ fieldLabels[r.field] }}</strong>
+                    <span class="request-status" [class]="statusClass(r.status)">
+                      {{ statusLabels[r.status] }}
+                    </span>
+                  </div>
+                  <p class="request-value">→ {{ r.requestedValue }}</p>
+                  <p class="request-meta">
+                    {{ r.createdAt | date:'dd/MM/yyyy à HH:mm' }} · PJ : {{ r.fileName }}
+                  </p>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </section>
+    </div>
   }
 </div>

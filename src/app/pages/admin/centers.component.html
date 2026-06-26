@@ -13,7 +13,7 @@
       <input
         type="search"
         [(ngModel)]="searchQuery"
-        placeholder="Rechercher par nom, ville ou adresse…"
+        placeholder="Rechercher par nom, ville, adresse ou téléphone…"
         aria-label="Rechercher un centre">
     </div>
     <button type="button" class="btn btn-primary" (click)="openCreate()">
@@ -30,6 +30,7 @@
           <tr>
             <th>Nom</th>
             <th>Ville</th>
+            <th>Contact</th>
             <th>Horaires</th>
             <th>Capacité / jour</th>
             <th>Statut</th>
@@ -44,6 +45,7 @@
                 <div class="sub">{{ c.address || '—' }}</div>
               </td>
               <td>{{ c.city }}</td>
+              <td class="col-phone">{{ c.phone || '—' }}</td>
               <td class="schedule">{{ formatSchedule(c) }}</td>
               <td>{{ c.dailyCapacity }}</td>
               <td>
@@ -69,7 +71,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="empty">
+              <td colspan="7" class="empty">
                 @if (searchQuery.trim()) {
                   Aucun centre ne correspond à votre recherche.
                 } @else {
@@ -135,6 +137,13 @@
                   <div class="field-control">
                     <i class="pi pi-home field-icon" aria-hidden="true"></i>
                     <input id="center-address" formControlName="address" placeholder="Rue, quartier…">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="center-phone">Contact (N° tel)</label>
+                  <div class="field-control">
+                    <i class="pi pi-phone field-icon" aria-hidden="true"></i>
+                    <input id="center-phone" formControlName="phone" type="tel" placeholder="+223 00 00 00 00">
                   </div>
                 </div>
               </div>
@@ -274,6 +283,10 @@
           <div class="detail-item">
             <span class="detail-label">Adresse</span>
             <span class="detail-value">{{ center.address || '—' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Contact (N° tel)</span>
+            <span class="detail-value">{{ center.phone || '—' }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">Capacité journalière</span>

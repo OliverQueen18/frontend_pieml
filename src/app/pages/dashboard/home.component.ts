@@ -72,7 +72,7 @@ export class DashboardHomeComponent implements OnInit {
 
       this.activeDossier = this.dossiers.find(d =>
 
-        ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'PAYMENT_PENDING', 'VALIDATED', 'PAID'].includes(d.status)
+        ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'PAYMENT_PENDING', 'PAID', 'VALIDATED', 'APPOINTMENT_SCHEDULED', 'IMMATRICULATION_IN_PROGRESS'].includes(d.status)
 
       ) || this.dossiers[0] || null;
 
@@ -155,6 +155,7 @@ export class DashboardHomeComponent implements OnInit {
       IN_REVIEW: 'badge-orange', SUBMITTED: 'badge-orange', DRAFT: 'badge-orange',
 
       VALIDATED: 'badge-green', PAID: 'badge-green', COMPLETED: 'badge-green',
+      APPOINTMENT_SCHEDULED: 'badge-blue', IMMATRICULATION_IN_PROGRESS: 'badge-blue',
       REJECTED: 'badge-red', PAYMENT_PENDING: 'badge-blue',
       STOLEN: 'badge-red', LOST: 'badge-orange', SOLD: 'badge-purple'
     };

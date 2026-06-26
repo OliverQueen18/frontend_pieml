@@ -219,6 +219,18 @@ export class DossierWizardComponent implements OnInit {
 
 
 
+  get selectedVehicleTypeLabel(): string {
+
+    const vehicleTypeId = this.vehicleForm.value.vehicleTypeId;
+
+    const fromForm = this.vehicleTypes.find(v => v.id === vehicleTypeId)?.libelle;
+
+    return fromForm || this.dossier?.vehicle?.vehicleType || '—';
+
+  }
+
+
+
   formatFcfa(amount: number): string {
 
     return `${amount.toLocaleString('fr-FR')} FCFA`;

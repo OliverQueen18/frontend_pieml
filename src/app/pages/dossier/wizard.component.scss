@@ -121,6 +121,33 @@
   margin-bottom: 1rem;
 }
 
+.payment-context {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  background: #f8fafc;
+  border: 1px solid var(--pie-border);
+  border-radius: 10px;
+
+  .context-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.88rem;
+
+    span {
+      color: var(--pie-muted);
+    }
+
+    strong {
+      color: var(--pie-navy);
+      text-align: right;
+    }
+  }
+}
+
 .payment-single {
   display: flex;
   align-items: flex-start;

@@ -143,64 +143,236 @@
   flex-wrap: wrap;
 }
 
-.lookup-dialog {
-  max-width: 580px;
-  border: 1px solid rgba(30, 58, 95, 0.08);
+.brand-form-backdrop {
+  animation: brand-form-fade-in 0.22s ease;
+}
+
+.brand-form-dialog {
+  position: relative;
+  max-width: 620px;
+  width: min(620px, calc(100vw - 2rem));
+  padding: 0;
+  border: 1px solid rgba(30, 58, 95, 0.14);
+  border-radius: 20px;
+  overflow: hidden;
   box-shadow:
-    0 24px 48px rgba(15, 23, 42, 0.18),
-    0 8px 16px rgba(15, 23, 42, 0.08);
+    0 28px 56px rgba(15, 23, 42, 0.22),
+    0 12px 24px rgba(15, 23, 42, 0.12),
+    0 4px 8px rgba(15, 23, 42, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.85) inset;
+  animation: brand-form-rise 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.modal-form {
-  margin-top: 0.25rem;
+.brand-form-accent {
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--pie-navy, #1e3a5f) 0%,
+    #3b82f6 45%,
+    var(--pie-green, #1aab4b) 100%
+  );
 }
 
-.checkbox-group {
-  grid-column: span 1;
+.brand-form-header {
+  padding: 1.25rem 1.5rem 1.1rem;
+  border-bottom: 1px solid rgba(30, 58, 95, 0.08);
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
 }
 
-.checkbox-card {
+.brand-form-intro {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  border: 1px solid var(--pie-border);
-  border-radius: 10px;
-  cursor: pointer;
-  height: 100%;
-  transition: border-color 0.2s, background 0.2s;
+  gap: 1rem;
+  min-width: 0;
+}
 
-  input {
-    margin-top: 0.2rem;
-    accent-color: var(--pie-green, #1aab4b);
-  }
+.brand-form-icon {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
 
-  strong {
-    display: block;
-    font-size: 0.88rem;
-    color: var(--pie-navy);
-    margin-bottom: 0.15rem;
-  }
-
-  small {
-    font-size: 0.78rem;
-    color: var(--pie-muted);
-    line-height: 1.35;
-  }
-
-  &:has(input:checked) {
-    border-color: rgba(26, 171, 75, 0.45);
-    background: #f0fdf4;
+  i {
+    font-size: 1.15rem;
+    color: #1d4ed8;
   }
 }
 
-.modal-actions {
+.brand-form {
   display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--pie-border);
+  flex-direction: column;
+  min-height: 0;
+  background: #f8fafc;
+}
+
+.brand-form-body {
+  padding: 1.15rem 1.5rem 0.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.form-section-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--pie-muted, #64748b);
+}
+
+.brand-form .form-panel {
+  padding: 1.15rem 1.2rem;
+  background: #fff;
+  border: 1px solid var(--pie-border, #e2e8f0);
+  border-radius: 14px;
+  box-shadow:
+    0 4px 16px rgba(15, 23, 42, 0.06),
+    0 1px 3px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.brand-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1rem;
+}
+
+.brand-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0;
+
+  &.full {
+    grid-column: 1 / -1;
+  }
+
+  label:not(.checkbox-card) {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--pie-muted, #64748b);
+  }
+}
+
+.brand-form .field-control {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+  &:focus-within {
+    background: #fff;
+    border-color: var(--pie-green, #1aab4b);
+    box-shadow:
+      0 0 0 3px rgba(26, 171, 75, 0.1),
+      inset 0 1px 2px rgba(15, 23, 42, 0.02);
+  }
+
+  input,
+  textarea {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0.72rem 0.85rem 0.72rem 0;
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: var(--pie-navy, #1e3a5f);
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  textarea {
+    min-height: 88px;
+    resize: vertical;
+    line-height: 1.45;
+  }
+}
+
+.brand-form .field-control--textarea {
+  align-items: flex-start;
+
+  .field-icon--textarea {
+    margin-top: 0.72rem;
+  }
+
+  textarea {
+    padding-top: 0.72rem;
+    padding-bottom: 0.72rem;
+  }
+}
+
+.brand-form .field-icon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--pie-muted, #64748b);
+  padding-left: 0.15rem;
+  pointer-events: none;
+}
+
+.brand-form .checkbox-group {
+  grid-column: 1 / -1;
+}
+
+.brand-form .checkbox-card {
+  margin: 0;
+}
+
+.brand-form-actions {
+  margin-top: auto;
+  padding: 1rem 1.5rem 1.35rem;
+  border-top: 1px solid var(--pie-border, #e2e8f0);
+  background: linear-gradient(180deg, #fafbfc 0%, #fff 100%);
+  box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.04);
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 140px;
+    box-shadow: 0 2px 8px rgba(26, 171, 75, 0.22);
+  }
+}
+
+@keyframes brand-form-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes brand-form-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (max-width: 640px) {
@@ -213,7 +385,22 @@
     max-width: none;
   }
 
-  .checkbox-group {
-    grid-column: 1 / -1;
+  .brand-form .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-form-body,
+  .brand-form-actions {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+
+  .brand-form-actions {
+    flex-wrap: wrap;
+
+    .btn {
+      flex: 1;
+      min-width: 0;
+    }
   }
 }

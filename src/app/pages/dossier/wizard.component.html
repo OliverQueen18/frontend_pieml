@@ -155,6 +155,18 @@
       }
       <div class="card" [formGroup]="paymentForm">
         <h2>Récapitulatif des frais</h2>
+        <div class="payment-context">
+          <div class="context-row">
+            <span>Type d'engin</span>
+            <strong>{{ selectedVehicleTypeLabel }}</strong>
+          </div>
+          @if (selectedCenter) {
+            <div class="context-row">
+              <span>Centre sélectionné</span>
+              <strong>{{ selectedCenter.city }} — {{ selectedCenter.name }}</strong>
+            </div>
+          }
+        </div>
         @if (loadingPaymentData) {
           <p class="payment-loading">Chargement des tarifs et centres...</p>
         } @else if (registrationTariff) {
@@ -223,6 +235,7 @@
               @if (registrationTariff) {
                 ({{ formatFcfa(totalFee) }}).
               }
+              Type d'engin : {{ selectedVehicleTypeLabel }}.
               @if (selectedCenter) {
                 Centre : {{ selectedCenter.city }} — {{ selectedCenter.name }}.
               }

@@ -1,0 +1,269 @@
+<div class="admin-page revenue-dashboard">
+  <div class="page-header">
+    <h2>Situation des recettes</h2>
+    <p>Tableau de bord financier des paiements Trésor Pay par centre, période et type d'engin.</p>
+  </div>
+
+  @if (error) { <div class="alert error">{{ error }}</div> }
+
+  <div class="filters-panel admin-card">
+    <div class="filters-row filters-row--dates">
+      <div class="date-range-filters">
+        <label class="date-filter">
+          <span>Du</span>
+          <input type="date" [(ngModel)]="dateFrom" (ngModelChange)="onDateFilterChange()" aria-label="Date de début">
+        </label>
+        <label class="date-filter">
+          <span>Au</span>
+          <input type="date" [(ngModel)]="dateTo" (ngModelChange)="onDateFilterChange()" aria-label="Date de fin">
+        </label>
+        <label class="date-filter period-filter">
+          <span>Période</span>
+          <select [(ngModel)]="periodPreset" (ngModelChange)="onPeriodChange($event)" aria-label="Période">
+            @for (p of periodOptions; track p.value) {
+              <option [ngValue]="p.value">{{ p.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <button type="button" class="btn btn-outline btn-sm reset-btn" (click)="resetFilters()">Réinitialiser</button>
+    </div>
+
+    <div class="filters-row filters-row--checks">
+      <fieldset class="checkbox-filter">
+        <legend>Villes</legend>
+        @if (citiesScope !== 'none') {
+          <button type="button" class="clear-filter-btn" (click)="clearCityFilters()">Décocher tout</button>
+        }
+        <label class="check-option check-option--all">
+          <input
+            type="checkbox"
+            [checked]="allCitiesSelected"
+            (change)="onAllCitiesChange($any($event.target).checked)"
+            aria-label="Toutes les villes">
+          <span>Toutes les villes</span>
+        </label>
+        <div class="check-list">
+          @for (city of cities; track city) {
+            <label class="check-option">
+              <input
+                type="checkbox"
+                [checked]="isCitySelected(city)"
+                [disabled]="allCitiesSelected"
+                (change)="onCityChange(city, $any($event.target).checked)"
+                [attr.aria-label]="'Ville ' + city">
+              <span>{{ city }}</span>
+            </label>
+          } @empty {
+            <p class="filter-empty">Aucune ville configurée.</p>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="checkbox-filter">
+        <legend>Centres</legend>
+        @if (centersScope !== 'none') {
+          <button type="button" class="clear-filter-btn" (click)="clearCenterFilters()">Décocher tout</button>
+        }
+        @if (citiesScope === 'custom') {
+          <p class="filter-hint">Centres des villes sélectionnées</p>
+        }
+        <label class="check-option check-option--all">
+          <input
+            type="checkbox"
+            [checked]="allCentersSelected"
+            (change)="onAllCentersChange($any($event.target).checked)"
+            aria-label="Tous les centres">
+          <span>Tous les centres</span>
+        </label>
+        <div class="check-list">
+          @for (c of filteredCentersForFilter; track c.id) {
+            <label class="check-option">
+              <input
+                type="checkbox"
+                [checked]="isCenterSelected(c.id)"
+                [disabled]="allCentersSelected"
+                (change)="onCenterChange(c.id, $any($event.target).checked)"
+                [attr.aria-label]="'Centre ' + c.name">
+              <span>{{ c.name }} <small>({{ c.city }})</small></span>
+            </label>
+          } @empty {
+            <p class="filter-empty">Aucun centre pour les villes sélectionnées.</p>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="checkbox-filter">
+        <legend>Types d'engin</legend>
+        @if (vehicleTypesScope !== 'none') {
+          <button type="button" class="clear-filter-btn" (click)="clearVehicleTypeFilters()">Décocher tout</button>
+        }
+        <label class="check-option check-option--all">
+          <input
+            type="checkbox"
+            [checked]="allVehicleTypesSelected"
+            (change)="onAllVehicleTypesChange($any($event.target).checked)"
+            aria-label="Tous les types d'engin">
+          <span>Tous les types</span>
+        </label>
+        <div class="check-list">
+          @for (v of vehicleTypes; track v.id) {
+            <label class="check-option">
+              <input
+                type="checkbox"
+                [checked]="isVehicleTypeSelected(v.id)"
+                [disabled]="allVehicleTypesSelected"
+                (change)="onVehicleTypeChange(v.id, $any($event.target).checked)"
+                [attr.aria-label]="'Type ' + v.libelle">
+              <span>{{ v.libelle }}</span>
+            </label>
+          } @empty {
+            <p class="filter-empty">Aucun type d'engin configuré.</p>
+          }
+        </div>
+      </fieldset>
+    </div>
+  </div>
+
+  <div class="results-meta">
+    {{ filteredPayments.length }} paiement(s) sur la période
+    @if (periodPreset === 'all') {
+      <span class="date-range-hint"> — toutes les périodes</span>
+    } @else if (dateFrom && dateTo) {
+      <span class="date-range-hint"> — {{ periodLabel() }} : du {{ formatDisplayDate(dateFrom) }} au {{ formatDisplayDate(dateTo) }}</span>
+    }
+    @if (citiesScope === 'custom') {
+      <span class="date-range-hint"> — villes : {{ selectedCitiesLabel }}</span>
+    } @else if (citiesScope === 'none') {
+      <span class="date-range-hint"> — aucune ville sélectionnée</span>
+    }
+  </div>
+
+  @if (loading) {
+    <p class="loading-hint">Chargement des recettes…</p>
+  } @else {
+    <div class="stats-row">
+      <div class="stat-card green">
+        <span class="num">{{ totalRevenue | number:'1.0-0' }}</span>
+        <span class="label">Recettes confirmées (FCFA)</span>
+      </div>
+      <div class="stat-card navy">
+        <span class="num">{{ completedPayments.length }}</span>
+        <span class="label">Paiements confirmés</span>
+      </div>
+      <div class="stat-card blue">
+        <span class="num">{{ totalDossierFees | number:'1.0-0' }}</span>
+        <span class="label">Frais dossier (FCFA)</span>
+      </div>
+      <div class="stat-card purple">
+        <span class="num">{{ totalServiceFees | number:'1.0-0' }}</span>
+        <span class="label">Frais service (FCFA)</span>
+      </div>
+      <div class="stat-card orange">
+        <span class="num">{{ pendingAmount | number:'1.0-0' }}</span>
+        <span class="label">En attente / en cours (FCFA)</span>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="admin-card chart-panel">
+        <h3>Recettes par centre</h3>
+        @if (revenueByCenter.length) {
+          <div class="breakdown-chart">
+            @for (row of revenueByCenter; track row.key) {
+              <div class="breakdown-row">
+                <div class="breakdown-meta">
+                  <strong>{{ row.label }}</strong>
+                  <span>{{ row.count }} paiement(s)</span>
+                </div>
+                <div class="breakdown-bar-wrap">
+                  <div class="breakdown-bar green" [style.width]="barWidth(row.amount, maxCenterAmount)"></div>
+                </div>
+                <span class="breakdown-amount">{{ row.amount | number:'1.0-0' }} FCFA</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="chart-empty">Aucune recette confirmée pour ces filtres.</p>
+        }
+      </div>
+
+      <div class="admin-card chart-panel">
+        <h3>Recettes par type d'engin</h3>
+        @if (revenueByVehicleType.length) {
+          <div class="breakdown-chart">
+            @for (row of revenueByVehicleType; track row.key) {
+              <div class="breakdown-row">
+                <div class="breakdown-meta">
+                  <strong>{{ row.label }}</strong>
+                  <span>{{ row.count }} paiement(s)</span>
+                </div>
+                <div class="breakdown-bar-wrap">
+                  <div class="breakdown-bar navy" [style.width]="barWidth(row.amount, maxVehicleTypeAmount)"></div>
+                </div>
+                <span class="breakdown-amount">{{ row.amount | number:'1.0-0' }} FCFA</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="chart-empty">Aucune recette confirmée pour ces filtres.</p>
+        }
+      </div>
+    </div>
+
+    <div class="admin-card chart-panel timeline-panel">
+      <h3>Évolution des recettes confirmées</h3>
+      @if (revenueTimeline.length) {
+        <div class="bar-chart" aria-hidden="true">
+          @for (point of revenueTimeline; track point.label) {
+            <div class="bar-col" [title]="point.label + ' : ' + (point.amount | number:'1.0-0') + ' FCFA'">
+              <div class="bar-track">
+                <div class="bar-fill green" [style.height]="barHeight(point.amount, maxTimelineAmount)"></div>
+              </div>
+              <span class="bar-label">{{ point.label }}</span>
+              <span class="bar-value">{{ point.amount | number:'1.0-0' }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="chart-empty">Aucune recette confirmée sur cette période.</p>
+      }
+    </div>
+
+    <div class="admin-card table-card">
+      <h3>Détail des paiements filtrés</h3>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>DOSSIER</th>
+              <th>CENTRE</th>
+              <th>TYPE D'ENGIN</th>
+              <th>MONTANT</th>
+              <th>STATUT</th>
+              <th>DATE</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filteredPayments; track p.id) {
+              <tr>
+                <td><code class="code-tag">{{ p.dossierReference }}</code></td>
+                <td>{{ p.centerName || '—' }}</td>
+                <td>{{ p.vehicleTypeLabel || '—' }}</td>
+                <td><strong>{{ p.totalAmount | number:'1.0-0' }} FCFA</strong></td>
+                <td>
+                  <span class="badge status" [class]="'status-' + statusClass(p.status)">
+                    {{ statusLabels[p.status] || p.status }}
+                  </span>
+                </td>
+                <td>{{ p.paymentDate ? (p.paymentDate | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="empty">Aucun paiement pour ces filtres.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

@@ -97,6 +97,10 @@ export class DossierService {
     return this.api.getBlob(`/citizen/dossiers/${dossierId}/declaration/file`);
   }
 
+  getPlateDeliveryFile(dossierId: number) {
+    return this.api.getBlob(`/citizen/dossiers/${dossierId}/remise-plaque/file`);
+  }
+
   declareVehicle(dossierId: number, declarationType: string, file: File) {
     const fd = new FormData();
     fd.append('declarationType', declarationType);

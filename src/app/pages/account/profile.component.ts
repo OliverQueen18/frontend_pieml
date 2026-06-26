@@ -1,45 +1,92 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AccountService } from '../../core/account.service';
-import { AuthService } from '../../core/auth.service';
+import {
+  PROFILE_CHANGE_FIELD_LABELS,
+  PROFILE_CHANGE_STATUS_LABELS,
+  ProfileChangeField,
+  ProfileChangeRequestDto
+} from '../../models';
 import { GeoCoordinates, OsmLocationPickerComponent } from '../../shared/osm-location-picker.component';
+
+const CHANGE_FIELDS: ProfileChangeField[] = [
+  'FIRST_NAME',
+  'LAST_NAME',
+  'NINA',
+  'PHONE',
+  'EMAIL',
+  'ADDRESS'
+];
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, OsmLocationPickerComponent],
+  imports: [ReactiveFormsModule, OsmLocationPickerComponent, DatePipe],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
 export class ProfileComponent implements OnInit {
   private fb = inject(FormBuilder);
   private account = inject(AccountService);
-  private auth = inject(AuthService);
 
   loading = true;
-  saving = false;
+  submitting = false;
   error = '';
   success = '';
+  claimError = '';
+  claimSuccess = '';
   geoError = '';
+  attachment: File | null = null;
 
+  readonly fieldOptions = CHANGE_FIELDS;
+  readonly fieldLabels = PROFILE_CHANGE_FIELD_LABELS;
+  readonly statusLabels = PROFILE_CHANGE_STATUS_LABELS;
   readonly emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  form = this.fb.group({
-    firstName: ['', Validators.required],
-    lastName: ['', Validators.required],
+  requests: ProfileChangeRequestDto[] = [];
+
+  profileForm = this.fb.group({
+    firstName: [{ value: '', disabled: true }],
+    lastName: [{ value: '', disabled: true }],
     nina: [{ value: '', disabled: true }],
-    phone: ['', [Validators.required, Validators.pattern(/^\+?[0-9]{8,15}$/)]],
-    email: ['', [Validators.required, Validators.pattern(this.emailPattern)]],
-    address: ['', [Validators.required, Validators.maxLength(500)]],
-    latitude: [null as number | null, Validators.required],
-    longitude: [null as number | null, Validators.required]
+    phone: [{ value: '', disabled: true }],
+    email: [{ value: '', disabled: true }],
+    address: [{ value: '', disabled: true }],
+    latitude: [{ value: null as number | null, disabled: true }],
+    longitude: [{ value: null as number | null, disabled: true }]
+  });
+
+  claimForm = this.fb.group({
+    field: ['' as ProfileChangeField | '', Validators.required],
+    requestedValue: ['', Validators.required],
+    reason: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
+    latitude: [null as number | null],
+    longitude: [null as number | null]
   });
 
   ngOnInit() {
+    this.loadProfile();
+    this.loadRequests();
+  }
+
+  get selectedField(): ProfileChangeField | '' {
+    return this.claimForm.controls.field.value ?? '';
+  }
+
+  get isAddressField(): boolean {
+    return this.selectedField === 'ADDRESS';
+  }
+
+  get mapAddress(): string {
+    return this.isAddressField ? (this.claimForm.controls.requestedValue.value ?? '') : '';
+  }
+
+  loadProfile() {
     this.account.getProfile().subscribe({
       next: res => {
         const p = res.data;
-        this.form.patchValue({
+        this.profileForm.patchValue({
           firstName: p.firstName,
           lastName: p.lastName,
           nina: p.nina,
@@ -58,65 +105,128 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  toUppercase(field: 'firstName' | 'lastName') {
-    const control = this.form.get(field);
-    const value = (control?.value ?? '').toString().toUpperCase();
-    if (control?.value !== value) {
-      control?.setValue(value, { emitEvent: false });
-    }
+  loadRequests() {
+    this.account.listProfileChangeRequests().subscribe({
+      next: res => this.requests = res.data,
+      error: () => { /* optional list */ }
+    });
   }
 
-  onLocationSelected(coords: GeoCoordinates | null) {
+  onFieldChange() {
+    this.claimForm.patchValue({
+      requestedValue: '',
+      latitude: null,
+      longitude: null
+    });
+    this.geoError = '';
+    this.attachment = null;
+    this.updateValueValidators();
+  }
+
+  onAttachmentSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.attachment = input.files?.[0] ?? null;
+  }
+
+  onClaimLocationSelected(coords: GeoCoordinates | null) {
     this.geoError = '';
     if (!coords) {
-      this.form.patchValue({ latitude: null, longitude: null });
+      this.claimForm.patchValue({ latitude: null, longitude: null });
       return;
     }
-    this.form.patchValue({
+    this.claimForm.patchValue({
       latitude: coords.latitude,
       longitude: coords.longitude
     });
   }
 
-  submit() {
-    this.form.markAllAsTouched();
-    if (this.form.invalid) {
-      if (!this.form.controls.latitude.value || !this.form.controls.longitude.value) {
-        this.geoError = 'Veuillez indiquer une adresse valide ou sélectionner un point sur la carte.';
-      }
+  submitClaim() {
+    this.claimForm.markAllAsTouched();
+    this.claimError = '';
+    this.claimSuccess = '';
+    this.geoError = '';
+
+    if (!this.attachment) {
+      this.claimError = 'La pièce justificative est obligatoire.';
       return;
     }
 
-    this.saving = true;
-    this.error = '';
-    this.success = '';
-    this.geoError = '';
+    if (this.isAddressField) {
+      const lat = this.claimForm.controls.latitude.value;
+      const lng = this.claimForm.controls.longitude.value;
+      if (lat == null || lng == null) {
+        this.geoError = 'Veuillez indiquer la nouvelle adresse sur la carte.';
+        return;
+      }
+    }
 
-    const value = this.form.getRawValue();
-    this.account.updateProfile({
-      firstName: value.firstName!.trim().toUpperCase(),
-      lastName: value.lastName!.trim().toUpperCase(),
-      phone: value.phone!.trim(),
-      email: value.email!.trim().toLowerCase(),
-      address: value.address!.trim(),
-      latitude: Number(value.latitude),
-      longitude: Number(value.longitude)
+    if (this.claimForm.invalid) return;
+
+    const value = this.claimForm.getRawValue();
+    this.submitting = true;
+
+    this.account.submitProfileChangeRequest({
+      field: value.field as ProfileChangeField,
+      requestedValue: this.normalizeRequestedValue(value.field as ProfileChangeField, value.requestedValue!),
+      requestedLatitude: this.isAddressField ? value.latitude : null,
+      requestedLongitude: this.isAddressField ? value.longitude : null,
+      reason: value.reason!.trim(),
+      file: this.attachment
     }).subscribe({
       next: res => {
-        const profile = res.data;
-        this.auth.updateSession({
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          email: profile.email,
-          ...(profile.token ? { token: profile.token } : {})
-        });
-        this.success = res.message || 'Profil mis à jour avec succès.';
-        this.saving = false;
+        this.claimSuccess = res.message || 'Réclamation enregistrée. Elle sera traitée par l\'administration.';
+        this.claimForm.reset({ field: '', requestedValue: '', reason: '', latitude: null, longitude: null });
+        this.attachment = null;
+        this.submitting = false;
+        this.loadRequests();
       },
       error: err => {
-        this.error = err.error?.message || 'Erreur lors de la mise à jour';
-        this.saving = false;
+        this.claimError = err.error?.message || 'Impossible d\'enregistrer la réclamation';
+        this.submitting = false;
       }
     });
+  }
+
+  statusClass(status: string): string {
+    switch (status) {
+      case 'APPROVED': return 'status-approved';
+      case 'REJECTED': return 'status-rejected';
+      default: return 'status-pending';
+    }
+  }
+
+  private normalizeRequestedValue(field: ProfileChangeField, value: string): string {
+    const trimmed = value.trim();
+    if (field === 'FIRST_NAME' || field === 'LAST_NAME' || field === 'NINA') return trimmed.toUpperCase();
+    if (field === 'EMAIL') return trimmed.toLowerCase();
+    return trimmed;
+  }
+
+  private updateValueValidators() {
+    const control = this.claimForm.controls.requestedValue;
+    control.clearValidators();
+    control.addValidators(Validators.required);
+
+    switch (this.selectedField) {
+      case 'NINA':
+        control.addValidators([
+          Validators.minLength(15),
+          Validators.maxLength(15),
+          Validators.pattern(/^[A-Za-z0-9]{15}$/)
+        ]);
+        break;
+      case 'PHONE':
+        control.addValidators(Validators.pattern(/^\+?[0-9]{8,15}$/));
+        break;
+      case 'EMAIL':
+        control.addValidators(Validators.pattern(this.emailPattern));
+        break;
+      case 'ADDRESS':
+        control.addValidators(Validators.maxLength(500));
+        break;
+      default:
+        break;
+    }
+    control.updateValueAndValidity();
   }
 }

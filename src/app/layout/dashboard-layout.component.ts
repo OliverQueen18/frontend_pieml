@@ -2,11 +2,12 @@ import { Component, ViewChild, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { TrackDossierDialogComponent } from '../shared/track-dossier-dialog.component';
+import { PiemlChatbotComponent } from '../shared/chatbot/pieml-chatbot.component';
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TrackDossierDialogComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TrackDossierDialogComponent, PiemlChatbotComponent],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.scss'
 })

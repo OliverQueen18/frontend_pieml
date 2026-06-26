@@ -1,0 +1,87 @@
+<div class="chatbot-root" [class.chatbot-root--open]="open">
+  @if (open) {
+    <div
+      class="chatbot-panel"
+      role="dialog"
+      aria-labelledby="chatbot-title"
+      aria-modal="true"
+      (keydown)="onBackdropKeydown($event)">
+      <header class="chatbot-header">
+        <div class="chatbot-header-info">
+          <span class="chatbot-avatar" aria-hidden="true">
+            <i class="pi pi-comments"></i>
+          </span>
+          <div>
+            <h2 id="chatbot-title">Assistant PIEML</h2>
+            <p>{{ subtitle }}</p>
+          </div>
+        </div>
+        <button type="button" class="chatbot-close" aria-label="Fermer l'assistant" (click)="close()">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <div class="chatbot-messages" #messagesEl aria-live="polite">
+        @for (msg of messages; track msg.id) {
+          <div class="chatbot-message" [class.chatbot-message--user]="msg.role === 'user'">
+            @if (msg.role === 'bot') {
+              <span class="chatbot-message-avatar" aria-hidden="true">
+                <i class="pi pi-sparkles"></i>
+              </span>
+            }
+            <div class="chatbot-bubble">
+              <p>{{ msg.text }}</p>
+              @if (msg.links?.length) {
+                <div class="chatbot-links">
+                  @for (link of msg.links; track link.label) {
+                    @if (link.routerLink) {
+                      <a [routerLink]="link.routerLink" class="chatbot-link" (click)="close()">{{ link.label }}</a>
+                    } @else {
+                      <button type="button" class="chatbot-link" (click)="followLink(link)">{{ link.label }}</button>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (messages.length <= 2) {
+        <div class="chatbot-quick" aria-label="Questions fréquentes">
+          @for (prompt of quickPrompts; track prompt.label) {
+            <button type="button" class="chatbot-quick-btn" (click)="ask(prompt.query)">
+              {{ prompt.label }}
+            </button>
+          }
+        </div>
+      }
+
+      <form class="chatbot-input" (ngSubmit)="send()">
+        <label class="visually-hidden" [attr.for]="inputId">Votre question</label>
+        <input
+          #inputEl
+          [id]="inputId"
+          type="text"
+          [(ngModel)]="draft"
+          name="chatbotDraft"
+          placeholder="Posez votre question…"
+          autocomplete="off"
+          maxlength="500" />
+        <button type="submit" class="chatbot-send" [disabled]="!draft.trim()" aria-label="Envoyer">
+          <i class="pi pi-send"></i>
+        </button>
+      </form>
+    </div>
+  }
+
+  <button
+    type="button"
+    class="chatbot-fab"
+    [attr.aria-expanded]="open"
+    [attr.aria-label]="open ? 'Fermer l\'assistant PIEML' : 'Ouvrir l\'assistant PIEML'"
+    (click)="toggle()">
+  <i class="pi" [class.pi-times]="open" [class.pi-comments]="!open"></i>
+    <span class="chatbot-fab-label">Assistant</span>
+  </button>
+</div>

@@ -1,1 +1,118 @@
 @use './account-page' as *;
+
+.profile-page {
+  max-width: 1100px;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.profile-panel {
+  height: 100%;
+}
+
+.panel-header {
+  margin-bottom: 1.25rem;
+
+  h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1.05rem;
+    color: var(--pie-navy);
+  }
+}
+
+.panel-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--pie-muted);
+  line-height: 1.45;
+}
+
+.profile-map ::ng-deep .osm-locate-btn {
+  display: none;
+}
+
+.profile-map ::ng-deep .osm-map {
+  pointer-events: none;
+}
+
+.requests-block {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--pie-border);
+
+  h4 {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    color: var(--pie-navy);
+  }
+}
+
+.requests-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  li {
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--pie-border);
+    border-radius: 10px;
+    background: #f8fafc;
+  }
+}
+
+.request-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.request-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+
+  &.status-pending {
+    background: #fffbeb;
+    color: #b45309;
+  }
+
+  &.status-approved {
+    background: #ecfdf5;
+    color: #047857;
+  }
+
+  &.status-rejected {
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+}
+
+.request-value {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--pie-navy);
+}
+
+.request-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: var(--pie-muted);
+}
+
+@media (max-width: 900px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+}

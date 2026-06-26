@@ -13,7 +13,7 @@
   @if (success) { <div class="alert success">{{ success }}</div> }
 
   <div class="admin-card filters-card">
-    <div class="filters-grid">
+    <div class="filters-grid filters-grid--text">
       <div class="filter-group">
         <label for="filter-reference">N° dossier</label>
         <input id="filter-reference" type="text" [(ngModel)]="referenceFilter" placeholder="MD2026/000004"
@@ -29,16 +29,113 @@
         <input id="filter-chassis" type="text" [(ngModel)]="chassisFilter" placeholder="Numéro de châssis"
           (keyup.enter)="load()">
       </div>
-      <div class="filter-group">
-        <label for="filter-status">Statut</label>
-        <select id="filter-status" [(ngModel)]="statusFilter">
-          <option value="">Tous les statuts</option>
-          @for (s of statusOptions; track s) {
-            <option [value]="s">{{ statusLabels[s] }}</option>
-          }
-        </select>
+    </div>
+
+    <div class="filters-row filters-row--dates">
+      <div class="date-range-group">
+        <span class="date-range-label">Date dossier</span>
+        <div class="date-range-filters">
+          <label class="date-filter">
+            <span>Du</span>
+            <input
+              type="date"
+              [(ngModel)]="createdFrom"
+              (ngModelChange)="onCreatedDateChange()"
+              aria-label="Date dossier — début">
+          </label>
+          <label class="date-filter">
+            <span>Au</span>
+            <input
+              type="date"
+              [(ngModel)]="createdTo"
+              (ngModelChange)="onCreatedDateChange()"
+              aria-label="Date dossier — fin">
+          </label>
+        </div>
+      </div>
+      <div class="date-range-group">
+        <span class="date-range-label">Date rendez-vous</span>
+        <div class="date-range-filters">
+          <label class="date-filter">
+            <span>Du</span>
+            <input
+              type="date"
+              [(ngModel)]="appointmentFrom"
+              (ngModelChange)="onAppointmentDateChange()"
+              aria-label="Date rendez-vous — début">
+          </label>
+          <label class="date-filter">
+            <span>Au</span>
+            <input
+              type="date"
+              [(ngModel)]="appointmentTo"
+              (ngModelChange)="onAppointmentDateChange()"
+              aria-label="Date rendez-vous — fin">
+          </label>
+        </div>
       </div>
     </div>
+
+    <div class="filters-row filters-row--checks">
+      <fieldset class="checkbox-filter">
+        <legend>Statuts</legend>
+        @if (statusScope !== 'none') {
+          <button type="button" class="clear-filter-btn" (click)="clearStatusFilters()">Décocher tout</button>
+        }
+        <label class="check-option check-option--all">
+          <input
+            type="checkbox"
+            [checked]="allStatusesSelected"
+            (change)="onAllStatusesChange($any($event.target).checked)"
+            aria-label="Tous les statuts">
+          <span>Tous les statuts</span>
+        </label>
+        <div class="check-list">
+          @for (s of filterStatusOptions; track s) {
+            <label class="check-option">
+              <input
+                type="checkbox"
+                [checked]="isStatusSelected(s)"
+                [disabled]="allStatusesSelected"
+                (change)="onStatusChange(s, $any($event.target).checked)"
+                [attr.aria-label]="'Statut ' + statusLabels[s]">
+              <span>{{ statusLabels[s] }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      @if (showCenterFilter) {
+        <fieldset class="checkbox-filter">
+          <legend>Centres</legend>
+          @if (centersScope !== 'none') {
+            <button type="button" class="clear-filter-btn" (click)="clearCenterFilters()">Décocher tout</button>
+          }
+          <label class="check-option check-option--all">
+            <input
+              type="checkbox"
+              [checked]="allCentersSelected"
+              (change)="onAllCentersChange($any($event.target).checked)"
+              aria-label="Tous les centres">
+            <span>Tous les centres</span>
+          </label>
+          <div class="check-list">
+            @for (c of userCenters; track c.id) {
+              <label class="check-option">
+                <input
+                  type="checkbox"
+                  [checked]="isCenterSelected(c.id)"
+                  [disabled]="allCentersSelected"
+                  (change)="onCenterChange(c.id, $any($event.target).checked)"
+                  [attr.aria-label]="'Centre ' + c.name">
+                <span>{{ c.name }} <small>({{ c.city }})</small></span>
+              </label>
+            }
+          </div>
+        </fieldset>
+      }
+    </div>
+
     <div class="filters-actions">
       <button type="button" class="btn btn-primary" (click)="load()">
         <i class="pi pi-search"></i> Rechercher
@@ -47,21 +144,6 @@
     </div>
   </div>
 
-  @if (selectedIds.size) {
-    <div class="bulk-toolbar">
-      <span>{{ selectedIds.size }} dossier(s) sélectionné(s)</span>
-      <div class="bulk-actions">
-        <button type="button" class="btn btn-sm btn-primary" [disabled]="bulkLoading" (click)="validateSelected()">
-          Valider la sélection
-        </button>
-        <button type="button" class="btn btn-sm btn-outline btn-danger-outline" [disabled]="bulkLoading" (click)="openBulkReject()">
-          Rejeter la sélection
-        </button>
-        <button type="button" class="btn btn-sm btn-outline" (click)="clearSelection()">Annuler</button>
-      </div>
-    </div>
-  }
-
   <div class="admin-card table-card">
     <div class="results-meta">{{ dossiers.length }} dossier(s)</div>
 
@@ -69,19 +151,12 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th class="col-check">
-              <input
-                type="checkbox"
-                [checked]="allTreatableSelected"
-                [disabled]="!treatableDossiers.length"
-                (change)="toggleSelectAll()"
-                aria-label="Tout sélectionner">
-            </th>
             <th>Date</th>
             <th>Référence</th>
             <th>Citoyen</th>
             <th>Engin</th>
             <th>N° châssis</th>
+            <th>N° plaque</th>
             <th>Documents</th>
             <th>Centre</th>
             <th>Rendez-vous</th>
@@ -91,64 +166,86 @@
         </thead>
         <tbody>
           @for (d of dossiers; track d.id) {
-            <tr [class.row-selected]="isSelected(d)">
-              <td class="col-check">
-                @if (canTreat(d)) {
-                  <input
-                    type="checkbox"
-                    [checked]="isSelected(d)"
-                    (change)="toggleSelect(d)"
-                    [attr.aria-label]="'Sélectionner ' + d.referenceNumber">
-                }
-              </td>
+            <tr [class.row-actionable]="canTreat(d)">
               <td class="col-date">{{ d.createdAt | date:'dd/MM/yyyy' }}</td>
               <td><strong>{{ d.referenceNumber }}</strong></td>
-              <td>
+              <td class="col-citizen">
                 {{ d.citizenName }}<br>
                 <small>{{ d.citizenEmail }}</small>
               </td>
               <td>{{ d.vehicleLabel || '—' }}</td>
               <td class="chassis">{{ d.chassisNumber || '—' }}</td>
+              <td class="plate-number">{{ d.plateNumber || '—' }}</td>
               <td>{{ documentsLabel(d) }}</td>
               <td>{{ d.centerName || '—' }}</td>
               <td>{{ appointmentLabel(d) }}</td>
-              <td>
+              <td class="col-status">
                 <span class="badge" [class]="statusClass(d.status)">
                   {{ statusLabels[d.status] || d.status }}
                 </span>
+                @if (canTreat(d)) {
+                  <small class="treatment-hint">{{ treatmentHint(d) }}</small>
+                }
               </td>
               <td class="actions">
+                <div class="actions-inner">
                 <a
                   [routerLink]="['/administration/dossiers', d.id]"
                   class="btn-icon"
+                  [class.btn-icon-primary]="canTreat(d)"
                   aria-label="Voir le dossier"
-                  title="Voir">
-                  <i class="pi pi-eye" aria-hidden="true"></i>
+                  title="{{ canTreat(d) ? 'Traiter' : 'Voir' }}">
+                  <i class="pi" [class.pi-cog]="canTreat(d)" [class.pi-eye]="!canTreat(d)" aria-hidden="true"></i>
                 </a>
-                @if (canTreat(d)) {
+                @if (canStartImmatriculation(d)) {
                   <button
                     type="button"
                     class="btn-icon btn-icon-success"
-                    [disabled]="actionLoadingId === d.id || bulkLoading"
-                    (click)="validate(d)"
-                    aria-label="Valider le dossier"
-                    title="Valider">
+                    [disabled]="actionLoadingId === d.id"
+                    (click)="startImmatriculation(d)"
+                    aria-label="Démarrer l'immatriculation"
+                    title="Démarrer l'immatriculation">
                     @if (actionLoadingId === d.id) {
                       <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
                     } @else {
-                      <i class="pi pi-check" aria-hidden="true"></i>
+                      <i class="pi pi-play" aria-hidden="true"></i>
                     }
                   </button>
+                }
+                @if (canCompleteImmatriculation(d)) {
+                  <button
+                    type="button"
+                    class="btn-icon btn-icon-success"
+                    [disabled]="actionLoadingId === d.id"
+                    (click)="openComplete(d)"
+                    aria-label="Immatriculer"
+                    title="Finaliser avec n° d'immatriculation">
+                    <i class="pi pi-check" aria-hidden="true"></i>
+                  </button>
+                }
+                @if (canRejectBeforeImmatriculation(d)) {
                   <button
                     type="button"
                     class="btn-icon btn-icon-danger"
-                    [disabled]="actionLoadingId === d.id || bulkLoading"
+                    [disabled]="actionLoadingId === d.id"
                     (click)="openReject(d)"
                     aria-label="Rejeter le dossier"
                     title="Rejeter">
                     <i class="pi pi-times" aria-hidden="true"></i>
                   </button>
                 }
+                @if (canCancelImmatriculation(d)) {
+                  <button
+                    type="button"
+                    class="btn-icon btn-icon-danger"
+                    [disabled]="actionLoadingId === d.id"
+                    (click)="openCancel(d)"
+                    aria-label="Annuler l'immatriculation"
+                    title="Annuler l'immatriculation">
+                    <i class="pi pi-ban" aria-hidden="true"></i>
+                  </button>
+                }
+                </div>
               </td>
             </tr>
           } @empty {
@@ -160,20 +257,55 @@
   </div>
 </div>
 
-@if (rejectTarget) {
-  <div class="reject-backdrop" (click)="closeReject()" role="presentation">
+@if (dialogTarget && dialogMode) {
+  <div class="reject-backdrop" (click)="closeDialog()" role="presentation">
     <div class="reject-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <h3>Rejeter {{ bulkRejectMode ? 'les dossiers sélectionnés' : 'le dossier ' + rejectTarget.referenceNumber }}</h3>
-      <p>Indiquez le motif de rejet. Le citoyen sera notifié.</p>
-      <label for="reject-reason">Motif de rejet</label>
-      <textarea id="reject-reason" rows="4" [(ngModel)]="rejectReason"
-        placeholder="Documents non conformes, informations incorrectes…"></textarea>
+      @if (dialogMode === 'complete') {
+        <h3>Immatriculer {{ dialogTarget.referenceNumber }}</h3>
+        <p>Saisissez le numéro d'immatriculation définitif. Le statut passera à « Immatriculé ».</p>
+        <label for="dialog-registration">N° d'immatriculation / plaque</label>
+        <input
+          id="dialog-registration"
+          type="text"
+          [(ngModel)]="dialogRegistrationNumber"
+          placeholder="ML-BKO-2026-12345"
+          (keyup.enter)="confirmDialog()">
+      } @else if (dialogMode === 'cancel') {
+        <h3>Annuler l'immatriculation — {{ dialogTarget.referenceNumber }}</h3>
+        <p>L'immatriculation sera annulée définitivement. Le citoyen sera notifié.</p>
+        <label for="dialog-cancel-reason">Motif d'annulation</label>
+        <textarea
+          id="dialog-cancel-reason"
+          rows="4"
+          [(ngModel)]="dialogReason"
+          placeholder="Anomalie constatée…"></textarea>
+      } @else {
+        <h3>Rejeter {{ dialogTarget.referenceNumber }}</h3>
+        <p>Rejet avant démarrage de l'immatriculation. Le citoyen sera notifié.</p>
+        <label for="dialog-reject-reason">Motif de rejet</label>
+        <textarea
+          id="dialog-reject-reason"
+          rows="4"
+          [(ngModel)]="dialogReason"
+          placeholder="Documents non conformes…"></textarea>
+      }
       <div class="reject-actions">
-        <button type="button" class="btn btn-outline" (click)="closeReject()">Annuler</button>
-        <button type="button" class="btn btn-primary reject-btn"
-          [disabled]="!rejectReason.trim() || bulkLoading || (!bulkRejectMode && actionLoadingId === rejectTarget.id)"
-          (click)="confirmReject()">
-          {{ bulkLoading || actionLoadingId === rejectTarget.id ? 'Envoi…' : 'Confirmer le rejet' }}
+        <button type="button" class="btn btn-outline" (click)="closeDialog()">Annuler</button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [class.reject-btn]="dialogMode !== 'complete'"
+          [disabled]="actionLoadingId === dialogTarget.id || (dialogMode === 'complete' ? !dialogRegistrationNumber.trim() : !dialogReason.trim())"
+          (click)="confirmDialog()">
+          @if (actionLoadingId === dialogTarget.id) {
+            Envoi…
+          } @else if (dialogMode === 'complete') {
+            Confirmer l'immatriculation
+          } @else if (dialogMode === 'cancel') {
+            Confirmer l'annulation
+          } @else {
+            Confirmer le rejet
+          }
         </button>
       </div>
     </div>

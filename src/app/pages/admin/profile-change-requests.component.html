@@ -1,0 +1,248 @@
+<div class="admin-page">
+  <div class="page-header">
+    <h2>Réclamations de profil</h2>
+    <p>Demandes de modification soumises par les citoyens avec pièce justificative.</p>
+  </div>
+
+  @if (error && !viewingItem) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        [(ngModel)]="searchQuery"
+        placeholder="Rechercher par citoyen, champ ou valeur…"
+        aria-label="Rechercher une réclamation">
+    </div>
+    <div class="filter-wrap">
+      <label for="status-filter">Statut</label>
+      <select id="status-filter" [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()">
+        @for (opt of statusOptions; track opt.value) {
+          <option [ngValue]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="admin-card table-card">
+    <div class="results-meta">
+      @if (loading) {
+        Chargement…
+      } @else {
+        {{ filteredRequests.length }} réclamation(s)
+      }
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>CITOYEN</th>
+            <th>CHAMP</th>
+            <th>VALEUR ACTUELLE</th>
+            <th>NOUVELLE VALEUR</th>
+            <th>STATUT</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of filteredRequests; track r.id) {
+            <tr class="clickable-row" (click)="openView(r)">
+              <td>{{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                <strong>{{ citizenName(r) }}</strong>
+                <div class="sub-text">{{ r.citizenEmail }}</div>
+              </td>
+              <td>{{ fieldLabels[r.field] || r.field }}</td>
+              <td class="value-cell">{{ r.currentValue }}</td>
+              <td class="value-cell">{{ r.requestedValue }}</td>
+              <td>
+                <span class="badge" [class]="statusClass(r.status)">
+                  {{ statusLabels[r.status] || r.status }}
+                </span>
+              </td>
+              <td class="actions" (click)="$event.stopPropagation()">
+                <button type="button" class="btn btn-sm btn-outline" (click)="openView(r)">
+                  Ouvrir
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="empty">
+                @if (loading) {
+                  Chargement des réclamations…
+                } @else if (searchQuery.trim()) {
+                  Aucune réclamation ne correspond à votre recherche.
+                } @else {
+                  Aucune réclamation pour ce filtre.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (viewingItem; as item) {
+  <div class="dialog-backdrop" (click)="closeView()" role="presentation">
+    <div
+      class="dialog claim-detail-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="claim-detail-title"
+      (click)="$event.stopPropagation()">
+
+      <header class="dialog-header">
+        <div>
+          <h2 id="claim-detail-title">Réclamation — {{ fieldLabels[item.field] || item.field }}</h2>
+          <p>{{ citizenName(item) }} — {{ item.createdAt | date:'dd/MM/yyyy à HH:mm' }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeView()" aria-label="Fermer">
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      <div class="claim-dialog-body">
+        <section class="claim-info-panel">
+          @if (error) { <div class="alert error">{{ error }}</div> }
+
+          <div class="detail-status">
+            <span class="badge" [class]="statusClass(item.status)">
+              {{ statusLabels[item.status] || item.status }}
+            </span>
+          </div>
+
+          <dl class="detail-grid">
+            <div>
+              <dt>Citoyen</dt>
+              <dd>{{ citizenName(item) }}</dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd>{{ item.citizenEmail }}</dd>
+            </div>
+            <div>
+              <dt>Téléphone</dt>
+              <dd>{{ item.citizenPhone }}</dd>
+            </div>
+            <div>
+              <dt>NINA actuel</dt>
+              <dd><code class="code-tag">{{ item.citizenNina }}</code></dd>
+            </div>
+            <div class="full">
+              <dt>Champ concerné</dt>
+              <dd>{{ fieldLabels[item.field] || item.field }}</dd>
+            </div>
+            <div>
+              <dt>Valeur actuelle</dt>
+              <dd>{{ item.currentValue }}</dd>
+            </div>
+            <div>
+              <dt>Nouvelle valeur demandée</dt>
+              <dd class="highlight">{{ item.requestedValue }}</dd>
+            </div>
+            @if (item.field === 'ADDRESS' && item.requestedLatitude != null && item.requestedLongitude != null) {
+              <div class="full">
+                <dt>Coordonnées demandées</dt>
+                <dd>{{ item.requestedLatitude | number:'1.5-5' }}, {{ item.requestedLongitude | number:'1.5-5' }}</dd>
+              </div>
+            }
+            <div class="full">
+              <dt>Motif de la réclamation</dt>
+              <dd>{{ item.reason }}</dd>
+            </div>
+          </dl>
+
+          @if (item.status === 'PENDING' && canManage) {
+            <div class="reject-block">
+              <label for="reject-reason">Motif de rejet (obligatoire en cas de refus)</label>
+              <textarea
+                id="reject-reason"
+                rows="3"
+                [(ngModel)]="rejectReason"
+                placeholder="Expliquez pourquoi la demande est refusée…"></textarea>
+            </div>
+
+            <footer class="dialog-actions claim-dialog-actions">
+              <button
+                type="button"
+                class="btn btn-outline btn-danger-outline"
+                [disabled]="processingId === item.id"
+                (click)="reject(item)">
+                {{ processingId === item.id ? '…' : 'Rejeter' }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="processingId === item.id"
+                (click)="approve(item)">
+                {{ processingId === item.id ? '…' : 'Approuver et appliquer' }}
+              </button>
+            </footer>
+          } @else if (item.status === 'PENDING' && !canManage) {
+            <p class="readonly-note">Vous pouvez consulter cette réclamation. Seuls les administrateurs peuvent l'approuver ou la rejeter.</p>
+          }
+        </section>
+
+        <section class="claim-preview-panel" aria-label="Pièce justificative">
+          <header class="preview-header">
+            <div>
+              <h3>Pièce justificative</h3>
+              <p>{{ item.fileName }}</p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline"
+              [disabled]="attachmentPreviewLoading"
+              (click)="downloadFile(item)">
+              <i class="pi pi-download"></i> Télécharger
+            </button>
+          </header>
+
+          <div class="attachment-preview-body">
+            @if (attachmentPreviewLoading) {
+              <div class="attachment-preview-loading">
+                <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+                Chargement de la pièce justificative…
+              </div>
+            } @else if (attachmentPreviewError) {
+              <div class="attachment-preview-fallback">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+                <p>{{ attachmentPreviewError }}</p>
+                <button type="button" class="btn btn-sm btn-outline" (click)="retryAttachmentPreview()">
+                  Réessayer
+                </button>
+              </div>
+            } @else if (attachmentPreviewUrl) {
+              @if (isImagePreview()) {
+                <img
+                  [src]="attachmentPreviewUrl"
+                  [alt]="item.fileName || 'Pièce justificative'"
+                  class="attachment-preview-image">
+              } @else if (isPdfPreview()) {
+                <iframe
+                  [src]="attachmentPreviewUrl"
+                  class="attachment-preview-frame"
+                  [title]="item.fileName || 'Pièce justificative PDF'"></iframe>
+              } @else {
+                <div class="attachment-preview-fallback">
+                  <i class="pi pi-file" aria-hidden="true"></i>
+                  <p>Aperçu non disponible pour ce format.</p>
+                  <button type="button" class="btn btn-sm btn-primary" (click)="downloadFile(item)">
+                    Télécharger le fichier
+                  </button>
+                </div>
+              }
+            }
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+}

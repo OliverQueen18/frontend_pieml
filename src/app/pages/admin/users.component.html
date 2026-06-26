@@ -53,6 +53,7 @@
               </td>
               <td>{{ u.createdAt | date:'dd/MM/yyyy' }}</td>
               <td class="actions">
+                <div class="actions-inner">
                 <button type="button" class="btn-icon" (click)="openView(u)" aria-label="Afficher" title="Afficher">
                   <i class="pi pi-eye" aria-hidden="true"></i>
                 </button>
@@ -113,6 +114,7 @@
                     <i class="pi pi-trash" aria-hidden="true"></i>
                   </button>
                 }
+                </div>
               </td>
             </tr>
           } @empty {

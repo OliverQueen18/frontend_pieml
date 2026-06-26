@@ -58,4 +58,8 @@
   </main>
 
   <app-track-dossier-dialog readerId="dashboard-track-qr-reader" />
+
+  <app-pieml-chatbot
+    context="citizen"
+    (trackRequested)="openTrackDialog()" />
 </div>

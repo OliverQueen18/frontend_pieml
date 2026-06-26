@@ -30,6 +30,62 @@ export interface CitizenProfileDto {
   token?: string | null;
 }
 
+export type ProfileChangeField =
+  | 'FIRST_NAME'
+  | 'LAST_NAME'
+  | 'NINA'
+  | 'PHONE'
+  | 'EMAIL'
+  | 'ADDRESS';
+
+export type ProfileChangeRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface ProfileChangeRequestDto {
+  id: number;
+  field: ProfileChangeField;
+  requestedValue: string;
+  requestedLatitude?: number | null;
+  requestedLongitude?: number | null;
+  reason: string;
+  fileName: string;
+  status: ProfileChangeRequestStatus;
+  createdAt: string;
+}
+
+export const PROFILE_CHANGE_FIELD_LABELS: Record<ProfileChangeField, string> = {
+  FIRST_NAME: 'Prénom',
+  LAST_NAME: 'Nom',
+  NINA: 'NINA',
+  PHONE: 'Téléphone',
+  EMAIL: 'Email',
+  ADDRESS: 'Adresse'
+};
+
+export const PROFILE_CHANGE_STATUS_LABELS: Record<ProfileChangeRequestStatus, string> = {
+  PENDING: 'En attente',
+  APPROVED: 'Approuvée',
+  REJECTED: 'Rejetée'
+};
+
+export interface AdminProfileChangeRequestDto {
+  id: number;
+  citizenId: number;
+  citizenFirstName: string;
+  citizenLastName: string;
+  citizenEmail: string;
+  citizenPhone: string;
+  citizenNina: string;
+  field: ProfileChangeField;
+  currentValue: string;
+  requestedValue: string;
+  requestedLatitude?: number | null;
+  requestedLongitude?: number | null;
+  reason: string;
+  fileName: string;
+  status: ProfileChangeRequestStatus;
+  createdAt: string;
+}
+
 export interface ContactPayload {
   name: string;
   email: string;
@@ -59,6 +115,7 @@ export interface VehicleDto {
   color: string;
   year: number;
   countryOfOrigin?: string;
+  registrationNumber?: string;
 }
 
 export interface VehicleCreateRequest {
@@ -103,6 +160,11 @@ export interface PaymentDto {
   status: string;
   paymentMethod?: string;
   paymentDate?: string;
+  centerId?: number;
+  centerName?: string;
+  centerCity?: string;
+  vehicleTypeId?: number;
+  vehicleTypeLabel?: string;
 }
 
 export interface AppointmentDto {
@@ -136,17 +198,46 @@ export interface ProcessingCenterDto {
   address?: string;
 }
 
+export interface PlateDeliveryDto {
+  id: number;
+  plateNumber: string;
+  deliveryDate: string;
+  collectorFirstName: string;
+  collectorLastName: string;
+  collectorPhone: string;
+  collectorAddress: string;
+  fileName?: string;
+  fileSize?: number;
+  contentType?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DossierCitizenDto {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  nina: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
 export interface DossierDto {
   id: number;
   referenceNumber: string;
   status: string;
   rejectionReason?: string;
+  citizen?: DossierCitizenDto;
   vehicle?: VehicleDto;
   documents: DocumentDto[];
   payment?: PaymentDto;
   appointment?: AppointmentDto;
   processingCenter?: ProcessingCenterDto;
   vehicleDeclaration?: VehicleDeclarationDto;
+  plateDelivery?: PlateDeliveryDto;
   createdAt: string;
   updatedAt: string;
 }
@@ -174,6 +265,7 @@ export interface CenterDto {
   name: string;
   city: string;
   address?: string;
+  phone?: string;
   latitude?: number | null;
   longitude?: number | null;
   dailyCapacity: number;
@@ -241,8 +333,10 @@ export interface AdminDossierSummary {
   citizenEmail: string;
   vehicleLabel?: string;
   chassisNumber?: string;
+  plateNumber?: string;
   uploadedDocuments: number;
   requiredDocuments: number;
+  centerId?: number;
   centerName?: string;
   appointmentDate?: string;
   appointmentTime?: string;
@@ -308,6 +402,10 @@ export interface AdminPaymentDto {
   dossierReference: string;
   citizenName: string;
   citizenEmail: string;
+  centerId?: number;
+  centerName?: string;
+  vehicleTypeId?: number;
+  vehicleTypeLabel?: string;
   amount: number;
   serviceFee: number;
   totalAmount: number;
@@ -362,7 +460,8 @@ export const DOSSIER_STATUS_LABELS: Record<string, string> = {
   REJECTED: 'Rejeté',
   PAYMENT_PENDING: 'Paiement en attente',
   PAID: 'Payé',
-  APPOINTMENT_SCHEDULED: 'RDV planifié',
+  APPOINTMENT_SCHEDULED: 'RDV Contrôle Physique',
+  IMMATRICULATION_IN_PROGRESS: 'Immatriculation en cours',
   COMPLETED: 'Immatriculé',
   STOLEN: 'Volé',
   LOST: 'Perdu',

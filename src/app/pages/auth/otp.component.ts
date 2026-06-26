@@ -56,28 +56,44 @@ const PENDING_EMAIL_KEY = 'pendingEmail';
             </button>
           </form>
 
-          <button
-            type="button"
-            class="btn btn-outline btn-block resend-btn"
-            (click)="resend()"
-            [disabled]="resending || !expired || cancelling">
-            {{ resending ? 'Envoi en cours...' : 'Renvoyer le code' }}
-          </button>
+          <div class="otp-actions">
+            <button
+              type="button"
+              class="btn btn-outline resend-btn"
+              (click)="resend()"
+              [disabled]="resending || !expired || cancelling">
+              {{ resending ? 'Envoi en cours...' : 'Renvoyer le code' }}
+            </button>
 
-          <button
-            type="button"
-            class="btn btn-outline btn-block cancel-btn"
-            (click)="cancelRegistration()"
-            [disabled]="cancelling || loading">
-            {{ cancelling ? 'Annulation…' : 'Annuler l\'inscription' }}
-          </button>
+            <button
+              type="button"
+              class="btn btn-outline cancel-btn"
+              (click)="cancelRegistration()"
+              [disabled]="cancelling || loading">
+              {{ cancelling ? 'Annulation…' : "Annuler l'inscription" }}
+            </button>
+          </div>
         }
       </div>
     </div>
   `,
   styles: [`
-    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3a5f, #152a45); padding: 2rem; }
-    .auth-card { width: 100%; max-width: 420px; }
+    .auth-page {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow-y: auto;
+      background: linear-gradient(135deg, #1e3a5f, #152a45);
+      padding: 1.5rem 1rem 2rem;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      margin: auto;
+      flex-shrink: 0;
+    }
     .auth-logo { display: flex; justify-content: center; margin-bottom: 0.75rem; }
     h1 { color: var(--pie-primary); margin-bottom: 0.25rem; }
     .subtitle { color: var(--pie-muted); margin-bottom: 0.75rem; }
@@ -87,7 +103,7 @@ const PENDING_EMAIL_KEY = 'pendingEmail';
       margin-bottom: 1.25rem;
       line-height: 1.45;
     }
-    .btn-block { width: 100%; }
+    .btn-block { width: 100%; box-sizing: border-box; }
     .otp-timer {
       font-size: 0.88rem;
       color: var(--pie-muted);
@@ -95,11 +111,44 @@ const PENDING_EMAIL_KEY = 'pendingEmail';
       text-align: center;
     }
     .otp-timer strong { color: var(--pie-primary); }
-    .resend-btn { margin-top: 0.75rem; }
+    .otp-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+      margin-top: 0.75rem;
+    }
+    .otp-actions .btn {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 2.75rem;
+      white-space: normal;
+      line-height: 1.35;
+      text-align: center;
+    }
+    .resend-btn {
+      border: 2px solid var(--pie-navy);
+      background: #fff;
+      color: var(--pie-navy);
+    }
+    .resend-btn:hover:not(:disabled) {
+      background: rgba(26, 51, 82, 0.04);
+    }
+    .resend-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
     .cancel-btn {
-      margin-top: 0.5rem;
+      border: 2px solid #fecaca;
+      background: #fff;
       color: #b91c1c;
-      border-color: #fecaca;
+    }
+    .cancel-btn:hover:not(:disabled) {
+      background: #fef2f2;
+      border-color: #f87171;
+    }
+    .cancel-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
     .alert-success {
       background: #ecfdf5;

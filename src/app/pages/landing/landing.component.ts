@@ -9,11 +9,12 @@ import { PiemlLogoComponent } from '../../shared/pieml-logo.component';
 import { TrackDossierDialogComponent } from '../../shared/track-dossier-dialog.component';
 import { ContactDialogComponent } from '../../shared/contact-dialog.component';
 import { FaqAccordionComponent } from '../../shared/faq-accordion.component';
+import { PiemlChatbotComponent } from '../../shared/chatbot/pieml-chatbot.component';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, StateLogoComponent, PiemlLogoComponent, TrackDossierDialogComponent, ContactDialogComponent, FaqAccordionComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, StateLogoComponent, PiemlLogoComponent, TrackDossierDialogComponent, ContactDialogComponent, FaqAccordionComponent, PiemlChatbotComponent],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.scss'
 })

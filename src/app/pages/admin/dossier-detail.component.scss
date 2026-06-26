@@ -71,6 +71,30 @@
   }
 }
 
+.detail-citizen {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(226, 232, 240, 0.95);
+}
+
+.detail-citizen-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pie-muted, #64748b);
+}
+
+.detail-fields--citizen {
+  .detail-field--full {
+    grid-column: 1 / -1;
+  }
+}
+
 .detail-hero-actions {
   display: flex;
   flex-direction: column;
@@ -552,4 +576,87 @@
   .detail-hero {
     padding: 1.1rem 1.15rem;
   }
+
+  .plate-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.plate-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    &.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--pie-navy, #1e3a5f);
+    }
+
+    input, textarea {
+      padding: 0.65rem 0.8rem;
+      border: 1px solid var(--pie-border, #e2e8f0);
+      border-radius: 10px;
+      font-family: inherit;
+    }
+  }
+}
+
+.plate-form-actions {
+  margin-top: 1rem;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #2980b9;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.appointment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--pie-navy, #1e3a5f);
+    }
+
+    select {
+      padding: 0.65rem 0.8rem;
+      border: 1px solid var(--pie-border, #e2e8f0);
+      border-radius: 10px;
+      font-family: inherit;
+    }
+  }
+}
+
+.appointment-current {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(41, 128, 185, 0.08);
+}
+
+.sub-text {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: var(--pie-muted, #64748b);
 }

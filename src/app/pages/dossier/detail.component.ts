@@ -83,6 +83,8 @@ export class DossierDetailComponent implements OnInit, OnDestroy {
   previewError = '';
 
   previewIsDeclaration = false;
+  previewIsPlateDelivery = false;
+  previewPlateContentType = '';
 
   previewDeclarationContentType = '';
 
@@ -305,6 +307,7 @@ export class DossierDetailComponent implements OnInit, OnDestroy {
     if (!this.dossier || !this.hasFile(doc)) return;
 
     this.previewIsDeclaration = false;
+    this.previewIsPlateDelivery = false;
 
     this.previewDoc = doc;
 
@@ -321,6 +324,7 @@ export class DossierDetailComponent implements OnInit, OnDestroy {
     const decl = this.dossier.vehicleDeclaration;
 
     this.previewIsDeclaration = true;
+    this.previewIsPlateDelivery = false;
 
     this.previewDoc = null;
 
@@ -331,6 +335,16 @@ export class DossierDetailComponent implements OnInit, OnDestroy {
   }
 
 
+
+  openPlateDeliveryFile() {
+    if (!this.dossier?.plateDelivery) return;
+    const pd = this.dossier.plateDelivery;
+    this.previewIsDeclaration = false;
+    this.previewIsPlateDelivery = true;
+    this.previewDoc = null;
+    this.previewPlateContentType = pd.contentType || '';
+    this.loadPreviewBlob(this.dossierService.getPlateDeliveryFile(this.dossier.id), pd.contentType);
+  }
 
   private loadPreviewBlob(
 
@@ -375,9 +389,9 @@ export class DossierDetailComponent implements OnInit, OnDestroy {
         this.previewUrl = URL.createObjectURL(blob);
 
         if (this.previewIsDeclaration) {
-
           this.previewDeclarationContentType = contentType || blob.type;
-
+        } else if (this.previewIsPlateDelivery) {
+          this.previewPlateContentType = contentType || blob.type;
         } else if (this.previewDoc && !this.previewDoc.contentType && blob.type) {
 
           this.previewDoc.contentType = blob.type;
@@ -429,14 +443,17 @@ export class DossierDetailComponent implements OnInit, OnDestroy {
     this.previewLoading = false;
 
     this.previewIsDeclaration = false;
-
+    this.previewIsPlateDelivery = false;
     this.previewDeclarationContentType = '';
-
+    this.previewPlateContentType = '';
   }
 
-
-
   isImagePreview() {
+    if (this.previewIsPlateDelivery) {
+      const type = this.previewPlateContentType.toLowerCase();
+      const name = (this.dossier?.plateDelivery?.fileName || '').toLowerCase();
+      return type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)$/.test(name);
+    }
 
     if (this.previewIsDeclaration) {
 
@@ -461,6 +478,11 @@ export class DossierDetailComponent implements OnInit, OnDestroy {
 
 
   isPdfPreview() {
+    if (this.previewIsPlateDelivery) {
+      const type = this.previewPlateContentType.toLowerCase();
+      const name = (this.dossier?.plateDelivery?.fileName || '').toLowerCase();
+      return type.includes('pdf') || name.endsWith('.pdf');
+    }
 
     if (this.previewIsDeclaration) {
 
@@ -485,6 +507,9 @@ export class DossierDetailComponent implements OnInit, OnDestroy {
 
 
   previewTitle(): string {
+    if (this.previewIsPlateDelivery) {
+      return 'Pièce justificative — remise de plaque';
+    }
 
     if (this.previewIsDeclaration && this.dossier?.vehicleDeclaration) {
 
@@ -499,6 +524,9 @@ export class DossierDetailComponent implements OnInit, OnDestroy {
 
 
   previewFileName(): string {
+    if (this.previewIsPlateDelivery && this.dossier?.plateDelivery) {
+      return this.dossier.plateDelivery.fileName || '';
+    }
 
     if (this.previewIsDeclaration && this.dossier?.vehicleDeclaration) {
 

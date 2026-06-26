@@ -420,4 +420,8 @@
     [showOpenDossierButton]="false" />
 
   <app-contact-dialog />
+
+  <app-pieml-chatbot
+    (trackRequested)="openTrackDialog()"
+    (contactRequested)="openContactDialog()" />
 </div>

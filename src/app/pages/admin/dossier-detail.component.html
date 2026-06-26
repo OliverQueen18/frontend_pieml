@@ -19,7 +19,11 @@
         <div class="detail-stats">
           <span class="stat-chip">
             <i class="pi pi-folder-open" aria-hidden="true"></i>
-            {{ uploadedDocumentsCount }}/{{ requiredDocumentsCount }} document(s) téléversé(s)
+            @if (canManageDocuments()) {
+              {{ validatedRequiredDocumentsCount }}/{{ requiredDocumentsCount }} document(s) requis validé(s)
+            } @else {
+              {{ uploadedDocumentsCount }}/{{ requiredDocumentsCount }} document(s) téléversé(s)
+            }
           </span>
           @if (dossier.appointment) {
             <span class="stat-chip">
@@ -33,6 +37,37 @@
             </span>
           }
         </div>
+        @if (dossier.citizen) {
+          <div class="detail-citizen">
+            <h4 class="detail-citizen-title">
+              <i class="pi pi-user" aria-hidden="true"></i> Citoyen
+            </h4>
+            <div class="detail-fields detail-fields--citizen">
+              <div class="detail-field">
+                <span class="field-label">Nom complet</span>
+                <span class="field-value">{{ dossier.citizen.firstName }} {{ dossier.citizen.lastName }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">Email</span>
+                <span class="field-value">{{ dossier.citizen.email }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">Téléphone</span>
+                <span class="field-value">{{ dossier.citizen.phone || '—' }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="field-label">N° NINA</span>
+                <span class="field-value"><code>{{ dossier.citizen.nina }}</code></span>
+              </div>
+              @if (dossier.citizen.address) {
+                <div class="detail-field detail-field--full">
+                  <span class="field-label">Adresse</span>
+                  <span class="field-value">{{ dossier.citizen.address }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </div>
       <div class="detail-hero-actions">
         <span class="badge status-badge" [class]="statusClass(dossier.status)">
@@ -71,6 +106,12 @@
                 <span class="field-label">N° châssis</span>
                 <span class="field-value"><code>{{ dossier.vehicle.chassisNumber }}</code></span>
               </div>
+              @if (dossier.vehicle.registrationNumber) {
+                <div class="detail-field">
+                  <span class="field-label">N° immatriculation</span>
+                  <span class="field-value"><code>{{ dossier.vehicle.registrationNumber }}</code></span>
+                </div>
+              }
               <div class="detail-field">
                 <span class="field-label">Couleur</span>
                 <span class="field-value">{{ dossier.vehicle.color || '—' }}</span>
@@ -87,12 +128,93 @@
           }
         </section>
 
+        @if (canManagePlateDelivery() || dossier.plateDelivery) {
+          <section class="detail-card detail-card--full">
+            <header class="detail-card-header">
+              <span class="detail-card-icon detail-card-icon--green" aria-hidden="true"><i class="pi pi-id-card"></i></span>
+              <div>
+                <h3>Remise de la plaque</h3>
+                <p>Numéro de plaque, date de remise et identité du retirant.</p>
+              </div>
+            </header>
+
+            @if (dossier.plateDelivery && !canManagePlateDelivery()) {
+              <div class="detail-fields">
+                <div class="detail-field"><span class="field-label">N° plaque</span><span class="field-value"><code>{{ dossier.plateDelivery.plateNumber }}</code></span></div>
+                <div class="detail-field"><span class="field-label">Date de remise</span><span class="field-value">{{ dossier.plateDelivery.deliveryDate | date:'dd/MM/yyyy' }}</span></div>
+                <div class="detail-field"><span class="field-label">Retirant</span><span class="field-value">{{ dossier.plateDelivery.collectorFirstName }} {{ dossier.plateDelivery.collectorLastName }}</span></div>
+                <div class="detail-field"><span class="field-label">Téléphone</span><span class="field-value">{{ dossier.plateDelivery.collectorPhone }}</span></div>
+                <div class="detail-field full"><span class="field-label">Adresse</span><span class="field-value">{{ dossier.plateDelivery.collectorAddress }}</span></div>
+                @if (dossier.plateDelivery.fileName) {
+                  <div class="detail-field full">
+                    <button type="button" class="btn btn-sm btn-outline" (click)="openPlateAttachment()" [disabled]="platePreviewLoading">
+                      <i class="pi pi-paperclip"></i> Voir la PJ — {{ dossier.plateDelivery.fileName }}
+                    </button>
+                  </div>
+                }
+              </div>
+            } @else if (canManagePlateDelivery()) {
+              <form class="plate-form" (ngSubmit)="savePlateDelivery()">
+                <div class="plate-form-grid">
+                  <div class="form-group">
+                    <label for="plate-number">N° plaque *</label>
+                    <input id="plate-number" [(ngModel)]="plateForm.plateNumber" name="plateNumber" placeholder="ML-BKO-2026-12345" required>
+                    @if (dossier.vehicle?.registrationNumber && !dossier.plateDelivery) {
+                      <p class="sub-text">Pré-rempli depuis le N° d'immatriculation.</p>
+                    }
+                  </div>
+                  <div class="form-group">
+                    <label for="delivery-date">Date de remise *</label>
+                    <input id="delivery-date" type="date" [(ngModel)]="plateForm.deliveryDate" name="deliveryDate" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="collector-first">Prénom du retirant *</label>
+                    <input id="collector-first" [(ngModel)]="plateForm.collectorFirstName" name="collectorFirstName" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="collector-last">Nom du retirant *</label>
+                    <input id="collector-last" [(ngModel)]="plateForm.collectorLastName" name="collectorLastName" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="collector-phone">N° téléphone *</label>
+                    <input id="collector-phone" [(ngModel)]="plateForm.collectorPhone" name="collectorPhone" required>
+                  </div>
+                  <div class="form-group full">
+                    <label for="collector-address">Adresse *</label>
+                    <textarea id="collector-address" [(ngModel)]="plateForm.collectorAddress" name="collectorAddress" rows="2" required></textarea>
+                  </div>
+                  <div class="form-group full">
+                    <label for="plate-pj">Pièce justificative {{ dossier.plateDelivery ? '(optionnelle pour mise à jour)' : '*' }}</label>
+                    <input id="plate-pj" type="file" accept="image/*,.pdf" (change)="onPlateAttachmentSelected($event)">
+                    @if (dossier.plateDelivery?.fileName) {
+                      <p class="sub-text">Fichier actuel : {{ dossier.plateDelivery!.fileName }}
+                        <button type="button" class="btn-link" (click)="openPlateAttachment()">Afficher</button>
+                      </p>
+                    }
+                  </div>
+                </div>
+                <div class="plate-form-actions">
+                  <button type="submit" class="btn btn-primary" [disabled]="plateSaving">
+                    {{ plateSaving ? 'Enregistrement…' : (dossier.plateDelivery ? 'Mettre à jour' : 'Enregistrer la remise') }}
+                  </button>
+                </div>
+              </form>
+            }
+          </section>
+        }
+
         <section class="detail-card detail-card--full">
           <header class="detail-card-header">
             <span class="detail-card-icon" aria-hidden="true"><i class="pi pi-folder-open"></i></span>
             <div>
               <h3>Documents</h3>
-              <p>{{ uploadedDocumentsCount }}/{{ requiredDocumentsCount }} téléversé(s) sur {{ requiredDocumentsCount }} requis</p>
+              <p>
+                @if (canManageDocuments()) {
+                  Validez individuellement chaque document requis ({{ validatedRequiredDocumentsCount }}/{{ requiredDocumentsCount }})
+                } @else {
+                  {{ uploadedDocumentsCount }}/{{ requiredDocumentsCount }} téléversé(s) sur {{ requiredDocumentsCount }} requis
+                }
+              </p>
             </div>
           </header>
 
@@ -162,6 +284,28 @@
                   [attr.title]="hasFile(doc) ? 'Afficher le document' : 'Document non disponible'">
                   <i class="pi pi-eye" aria-hidden="true"></i>
                 </button>
+                @if (canManageDocuments() && hasFile(doc) && doc.status !== 'VALIDATED') {
+                  <button
+                    type="button"
+                    class="btn-icon btn-icon-success"
+                    [disabled]="docActionLoading"
+                    (click)="validateDocument(doc)"
+                    [attr.aria-label]="'Valider ' + doc.typeDocument.libelle"
+                    title="Valider">
+                    <i class="pi pi-check" aria-hidden="true"></i>
+                  </button>
+                }
+                @if (canManageDocuments() && hasFile(doc) && doc.status !== 'REJECTED') {
+                  <button
+                    type="button"
+                    class="btn-icon btn-icon-danger"
+                    [disabled]="docActionLoading"
+                    (click)="rejectDocument(doc)"
+                    [attr.aria-label]="'Rejeter ' + doc.typeDocument.libelle"
+                    title="Rejeter">
+                    <i class="pi pi-times" aria-hidden="true"></i>
+                  </button>
+                }
                 @if (auth.isAdmin() && hasFile(doc)) {
                   <button
                     type="button"
@@ -203,6 +347,18 @@
                   <span class="field-value">{{ dossier.payment.paymentMethod }}</span>
                 </div>
               }
+              @if (dossier.payment.vehicleTypeLabel) {
+                <div class="detail-field">
+                  <span class="field-label">Type d'engin</span>
+                  <span class="field-value">{{ dossier.payment.vehicleTypeLabel }}</span>
+                </div>
+              }
+              @if (dossier.payment.centerName) {
+                <div class="detail-field">
+                  <span class="field-label">Centre</span>
+                  <span class="field-value">{{ dossier.payment.centerCity }} — {{ dossier.payment.centerName }}</span>
+                </div>
+              }
             </div>
           </section>
         }
@@ -233,21 +389,28 @@
           </section>
         }
 
-        @if (canValidate() && (auth.isAdmin() || auth.role() === 'VALIDATEUR')) {
+        @if (canManageDocuments()) {
           <section class="detail-card actions-card">
             <header class="detail-card-header">
               <span class="detail-card-icon detail-card-icon--yellow" aria-hidden="true"><i class="pi pi-check-square"></i></span>
-              <h3>Actions validateur</h3>
+              <div>
+                <h3>Étape 1 — Validation des documents</h3>
+                <p>Dossier payé : validez chaque document requis, puis validez le dossier.</p>
+              </div>
             </header>
 
             <div class="validator-actions">
               <button
                 type="button"
                 class="btn btn-primary btn-block"
-                [disabled]="dossierActionLoading"
+                [disabled]="!canValidateDossier() || dossierActionLoading"
                 (click)="validate()">
-                <i class="pi pi-check" aria-hidden="true"></i> Valider le dossier
+                <i class="pi pi-check" aria-hidden="true"></i>
+                Valider le dossier ({{ validatedRequiredDocumentsCount }}/{{ requiredDocumentsCount }} docs)
               </button>
+              @if (!allRequiredDocumentsValidated) {
+                <p class="sub-text">Tous les documents requis doivent être validés individuellement.</p>
+              }
 
               <div class="reject-panel">
                 <label for="reject-reason">Motif de rejet</label>
@@ -267,10 +430,216 @@
             </div>
           </section>
         }
+
+        @if (canConfirmAppointment()) {
+          <section class="detail-card actions-card">
+            <header class="detail-card-header">
+              <span class="detail-card-icon detail-card-icon--blue" aria-hidden="true"><i class="pi pi-calendar"></i></span>
+              <div>
+                <h3>Étape 2 — RDV Contrôle Physique</h3>
+                <p>Confirmez ou modifiez la date du rendez-vous de contrôle physique.</p>
+              </div>
+            </header>
+
+            @if (dossier.appointment) {
+              <p class="sub-text appointment-current">
+                RDV demandé : {{ dossier.appointment.centerName }} —
+                {{ dossier.appointment.appointmentDate | date:'dd/MM/yyyy' }}
+                à {{ dossier.appointment.appointmentTime }}
+              </p>
+            }
+
+            <form class="appointment-form" (ngSubmit)="confirmAppointment()">
+              <div class="form-group">
+                <label for="appt-center">Centre</label>
+                <select
+                  id="appt-center"
+                  [(ngModel)]="appointmentForm.centerId"
+                  name="centerId"
+                  (ngModelChange)="onAppointmentCenterChange()"
+                  required>
+                  <option [ngValue]="null">Sélectionner un centre</option>
+                  @for (c of centers; track c.id) {
+                    <option [ngValue]="c.id">{{ c.city }} — {{ c.name }}</option>
+                  }
+                </select>
+              </div>
+              @if (loadingAvailability) {
+                <p class="sub-text">Chargement des disponibilités…</p>
+              } @else if (availableAppointmentDates.length) {
+                <div class="form-group">
+                  <label for="appt-date">Date</label>
+                  <select
+                    id="appt-date"
+                    [(ngModel)]="appointmentForm.appointmentDate"
+                    name="appointmentDate"
+                    (ngModelChange)="onAppointmentDateChange()"
+                    required>
+                    <option value="">Choisir une date</option>
+                    @for (day of availableAppointmentDates; track day.date) {
+                      <option [value]="day.date.split('T')[0]">
+                        {{ day.date.split('T')[0] }} ({{ day.remaining }} place(s))
+                      </option>
+                    }
+                  </select>
+                </div>
+                @if (appointmentForm.appointmentDate) {
+                  <div class="form-group">
+                    <label for="appt-time">Heure</label>
+                    <select
+                      id="appt-time"
+                      [(ngModel)]="appointmentForm.appointmentTime"
+                      name="appointmentTime"
+                      required>
+                      <option value="">Choisir une heure</option>
+                      @for (t of appointmentTimeOptions; track t) {
+                        <option [value]="t">{{ t }}</option>
+                      }
+                    </select>
+                  </div>
+                }
+              }
+              <button
+                type="submit"
+                class="btn btn-primary btn-block"
+                [disabled]="dossierActionLoading || loadingCenters || !appointmentForm.centerId || !appointmentForm.appointmentDate || !appointmentForm.appointmentTime">
+                <i class="pi pi-calendar-plus" aria-hidden="true"></i> Confirmer le rendez-vous
+              </button>
+            </form>
+
+            <div class="reject-panel">
+              <label for="reject-reason-validated">Motif de rejet</label>
+              <textarea
+                id="reject-reason-validated"
+                [(ngModel)]="rejectReason"
+                rows="3"
+                placeholder="Documents non conformes…"></textarea>
+              <button
+                type="button"
+                class="btn btn-outline btn-block btn-danger-outline"
+                (click)="reject()"
+                [disabled]="!rejectReason.trim() || dossierActionLoading">
+                <i class="pi pi-times" aria-hidden="true"></i> Rejeter le dossier
+              </button>
+            </div>
+          </section>
+        }
+
+        @if (canStartImmatriculation()) {
+          <section class="detail-card actions-card">
+            <header class="detail-card-header">
+              <span class="detail-card-icon detail-card-icon--green" aria-hidden="true"><i class="pi pi-verified"></i></span>
+              <div>
+                <h3>Étape 3 — Immatriculation</h3>
+                <p>Le contrôle physique est terminé : démarrez l'immatriculation ou rejetez le dossier.</p>
+              </div>
+            </header>
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              [disabled]="dossierActionLoading"
+              (click)="startImmatriculation()">
+              <i class="pi pi-check-circle" aria-hidden="true"></i> Démarrer l'immatriculation
+            </button>
+
+            <div class="reject-panel">
+              <label for="reject-reason-appt">Motif de rejet</label>
+              <textarea
+                id="reject-reason-appt"
+                [(ngModel)]="rejectReason"
+                rows="3"
+                placeholder="Contrôle physique non conforme…"></textarea>
+              <button
+                type="button"
+                class="btn btn-outline btn-block btn-danger-outline"
+                (click)="reject()"
+                [disabled]="!rejectReason.trim() || dossierActionLoading">
+                <i class="pi pi-times" aria-hidden="true"></i> Rejeter avant immatriculation
+              </button>
+            </div>
+          </section>
+        }
+
+        @if (canCompleteImmatriculation()) {
+          <section class="detail-card actions-card">
+            <header class="detail-card-header">
+              <span class="detail-card-icon detail-card-icon--green" aria-hidden="true"><i class="pi pi-id-card"></i></span>
+              <div>
+                <h3>Étape 4 — Finalisation</h3>
+                <p>Saisissez le numéro d'immatriculation pour clôturer le dossier.</p>
+              </div>
+            </header>
+
+            <div class="form-group">
+              <label for="registration-number">N° d'immatriculation / plaque *</label>
+              <input
+                id="registration-number"
+                type="text"
+                [(ngModel)]="registrationNumber"
+                placeholder="ML-BKO-2026-12345"
+                (keyup.enter)="completeImmatriculation()">
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              [disabled]="!registrationNumber.trim() || dossierActionLoading"
+              (click)="completeImmatriculation()">
+              <i class="pi pi-check" aria-hidden="true"></i>
+              {{ dossierActionLoading ? 'Enregistrement…' : 'Valider et immatriculer' }}
+            </button>
+
+            <div class="reject-panel">
+              <label for="cancel-reason">Motif d'annulation</label>
+              <textarea
+                id="cancel-reason"
+                [(ngModel)]="cancelReason"
+                rows="3"
+                placeholder="Anomalie constatée lors de l'immatriculation…"></textarea>
+              <button
+                type="button"
+                class="btn btn-outline btn-block btn-danger-outline"
+                (click)="cancelImmatriculation()"
+                [disabled]="!cancelReason.trim() || dossierActionLoading">
+                <i class="pi pi-ban" aria-hidden="true"></i> Annuler définitivement l'immatriculation
+              </button>
+            </div>
+          </section>
+        }
       </aside>
     </div>
   }
 </div>
+
+@if (platePreviewUrl || platePreviewLoading || platePreviewError) {
+  <div class="dialog-backdrop" (click)="closePlatePreview()" role="presentation">
+    <div class="dialog doc-preview-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <div>
+          <h2>Pièce justificative — remise de plaque</h2>
+          <p>{{ dossier?.plateDelivery?.fileName }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closePlatePreview()" aria-label="Fermer"><i class="pi pi-times"></i></button>
+      </header>
+      <div class="doc-preview-body">
+        @if (platePreviewLoading) {
+          <div class="doc-preview-loading"><i class="pi pi-spin pi-spinner"></i> Chargement…</div>
+        } @else if (platePreviewError) {
+          <div class="alert error">{{ platePreviewError }}</div>
+        } @else if (platePreviewUrl) {
+          @if (isPlateImagePreview()) {
+            <img [src]="platePreviewUrl" [alt]="dossier?.plateDelivery?.fileName || 'PJ'" class="doc-preview-image">
+          } @else if (isPlatePdfPreview()) {
+            <iframe [src]="platePreviewUrl" class="doc-preview-frame" title="Pièce justificative PDF"></iframe>
+          } @else {
+            <div class="doc-preview-fallback">
+              <a [href]="platePreviewUrl" [download]="dossier?.plateDelivery?.fileName || 'pj'" class="btn btn-primary">Télécharger</a>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+}
 
 @if (previewDoc) {
   <div class="dialog-backdrop" (click)="closePreview()" role="presentation">

@@ -81,58 +81,100 @@
 </div>
 
 @if (showForm) {
-  <div class="dialog-backdrop" (click)="cancelForm()" role="presentation">
+  <div class="dialog-backdrop type-form-backdrop" (click)="cancelForm()" role="presentation">
     <div
-      class="dialog lookup-dialog"
+      class="dialog type-form-dialog"
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="editingId ? 'edit-type-title' : 'create-type-title'"
       (click)="$event.stopPropagation()">
 
-      <header class="dialog-header">
-        <div>
-          <h2 [id]="editingId ? 'edit-type-title' : 'create-type-title'">
-            {{ editingId ? 'Modifier le type' : 'Nouveau type d\'engin' }}
-          </h2>
-          <p>Définissez le code et le libellé affichés dans le formulaire citoyen.</p>
+      <div class="type-form-accent" aria-hidden="true"></div>
+
+      <header class="dialog-header type-form-header">
+        <div class="type-form-intro">
+          <span class="type-form-icon" aria-hidden="true">
+            <i class="pi pi-car"></i>
+          </span>
+          <div>
+            <h2 [id]="editingId ? 'edit-type-title' : 'create-type-title'">
+              {{ editingId ? 'Modifier le type' : 'Nouveau type d\'engin' }}
+            </h2>
+            <p>Définissez le code et le libellé affichés dans le formulaire citoyen.</p>
+          </div>
         </div>
         <button type="button" class="close-btn" (click)="cancelForm()" aria-label="Fermer">
           <i class="pi pi-times"></i>
         </button>
       </header>
 
-      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid modal-form">
-        <div class="form-group">
-          <label for="type-code">Code</label>
-          <input id="type-code" formControlName="code" placeholder="MOTO">
+      <form [formGroup]="form" (ngSubmit)="submit()" class="type-form">
+        <div class="type-form-body">
+          <section class="form-section">
+            <h3 class="form-section-title">Identification</h3>
+            <div class="form-panel">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="type-code">Code</label>
+                  <div class="field-control">
+                    <i class="pi pi-hashtag field-icon" aria-hidden="true"></i>
+                    <input id="type-code" formControlName="code" placeholder="MOTO">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="type-ordre">Ordre d'affichage</label>
+                  <div class="field-control">
+                    <i class="pi pi-sort-numeric-down field-icon" aria-hidden="true"></i>
+                    <input id="type-ordre" type="number" formControlName="ordre" min="1">
+                  </div>
+                </div>
+                <div class="form-group full">
+                  <label for="type-libelle">Libellé</label>
+                  <div class="field-control">
+                    <i class="pi pi-tag field-icon" aria-hidden="true"></i>
+                    <input id="type-libelle" formControlName="libelle" placeholder="Moto">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h3 class="form-section-title">Détails & visibilité</h3>
+            <div class="form-panel">
+              <div class="form-grid">
+                <div class="form-group full">
+                  <label for="type-desc">Description</label>
+                  <div class="field-control field-control--textarea">
+                    <i class="pi pi-align-left field-icon field-icon--textarea" aria-hidden="true"></i>
+                    <textarea
+                      id="type-desc"
+                      formControlName="description"
+                      rows="3"
+                      placeholder="Description courte (facultatif)"></textarea>
+                  </div>
+                </div>
+                <div class="form-group full checkbox-group">
+                  <label class="checkbox-card">
+                    <input type="checkbox" formControlName="actif">
+                    <span>
+                      <strong>Type actif</strong>
+                      <small>Visible dans les nouvelles demandes d'immatriculation</small>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-        <div class="form-group">
-          <label for="type-ordre">Ordre</label>
-          <input id="type-ordre" type="number" formControlName="ordre" min="1">
-        </div>
-        <div class="form-group full">
-          <label for="type-libelle">Libellé</label>
-          <input id="type-libelle" formControlName="libelle" placeholder="Moto">
-        </div>
-        <div class="form-group full">
-          <label for="type-desc">Description</label>
-          <input id="type-desc" formControlName="description" placeholder="Description courte (facultatif)">
-        </div>
-        <div class="form-group checkbox-group">
-          <label class="checkbox-card">
-            <input type="checkbox" formControlName="actif">
-            <span>
-              <strong>Actif</strong>
-              <small>Visible dans les nouvelles demandes</small>
-            </span>
-          </label>
-        </div>
-        <div class="form-group full modal-actions">
+
+        <footer class="modal-actions type-form-actions">
           <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
           <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+            <i class="pi" [class.pi-check]="editingId" [class.pi-plus]="!editingId" aria-hidden="true"></i>
             {{ editingId ? 'Enregistrer' : 'Créer le type' }}
           </button>
-        </div>
+        </footer>
       </form>
     </div>
   </div>

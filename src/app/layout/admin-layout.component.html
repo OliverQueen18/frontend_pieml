@@ -50,6 +50,20 @@
 
           </a>
 
+          <a
+            routerLink="/administration/reclamations-profil"
+            routerLinkActive="active"
+            class="nav-link-with-badge"
+            [attr.title]="pendingClaimsCount > 0 ? pendingClaimsCount + ' réclamation(s) en attente' : 'Réclamations de profil'">
+
+            <i class="pi pi-inbox"></i> Réclamations profil
+
+            @if (pendingClaimsCount > 0) {
+              <span class="nav-badge" [attr.aria-label]="pendingClaimsCount + ' en attente'">{{ pendingClaimsCount }}</span>
+            }
+
+          </a>
+
         }
 
         @if (auth.hasPermission(P.USERS_VIEW)) {
@@ -135,6 +149,16 @@
           <a routerLink="/administration/paiements" routerLinkActive="active">
 
             <i class="pi pi-wallet"></i> Paiements
+
+          </a>
+
+        }
+
+        @if (auth.hasPermission(P.PAYMENTS_VIEW)) {
+
+          <a routerLink="/administration/situation-recettes" routerLinkActive="active">
+
+            <i class="pi pi-chart-bar"></i> Situation des recettes
 
           </a>
 

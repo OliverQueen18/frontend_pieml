@@ -47,6 +47,8 @@
           <tr>
             <th>DOSSIER</th>
             <th>CITOYEN</th>
+            <th>CENTRE</th>
+            <th>TYPE D'ENGIN</th>
             <th>MONTANT</th>
             <th>TRANSACTION</th>
             <th>STATUT</th>
@@ -62,6 +64,8 @@
                 <strong>{{ p.citizenName }}</strong>
                 <div class="sub-text">{{ p.citizenEmail }}</div>
               </td>
+              <td>{{ p.centerName || '—' }}</td>
+              <td>{{ p.vehicleTypeLabel || '—' }}</td>
               <td><strong>{{ p.totalAmount | number:'1.0-0' }} FCFA</strong></td>
               <td>{{ p.transactionId || '—' }}</td>
               <td>
@@ -79,7 +83,7 @@
               </td>
             </tr>
           } @empty {
-            <tr><td colspan="7" class="empty">Aucun paiement pour cette période.</td></tr>
+            <tr><td colspan="9" class="empty">Aucun paiement pour cette période.</td></tr>
           }
         </tbody>
       </table>
@@ -105,6 +109,8 @@
         </div>
         <div class="detail-grid">
           <div class="detail-item"><span class="detail-label">Email</span><span class="detail-value">{{ payment.citizenEmail }}</span></div>
+          <div class="detail-item"><span class="detail-label">Centre</span><span class="detail-value">{{ payment.centerName || '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Type d'engin</span><span class="detail-value">{{ payment.vehicleTypeLabel || '—' }}</span></div>
           <div class="detail-item"><span class="detail-label">Frais dossier</span><span class="detail-value">{{ payment.amount | number:'1.0-0' }} FCFA</span></div>
           <div class="detail-item"><span class="detail-label">Frais service</span><span class="detail-value">{{ payment.serviceFee | number:'1.0-0' }} FCFA</span></div>
           <div class="detail-item"><span class="detail-label">Total</span><span class="detail-value"><strong>{{ payment.totalAmount | number:'1.0-0' }} FCFA</strong></span></div>

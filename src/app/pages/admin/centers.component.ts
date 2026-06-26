@@ -46,6 +46,7 @@ export class AdminCentersComponent implements OnInit {
     name: ['', Validators.required],
     city: ['', Validators.required],
     address: [''],
+    phone: [''],
     latitude: [null as number | null, Validators.required],
     longitude: [null as number | null, Validators.required],
     dailyCapacity: [50, [Validators.required, Validators.min(1)]],
@@ -66,7 +67,8 @@ export class AdminCentersComponent implements OnInit {
     return this.centers.filter(c =>
       c.name.toLowerCase().includes(q) ||
       c.city.toLowerCase().includes(q) ||
-      (c.address || '').toLowerCase().includes(q)
+      (c.address || '').toLowerCase().includes(q) ||
+      (c.phone || '').toLowerCase().includes(q)
     );
   }
 
@@ -114,6 +116,7 @@ export class AdminCentersComponent implements OnInit {
       name: center.name,
       city: center.city,
       address: center.address || '',
+      phone: center.phone || '',
       latitude: center.latitude ?? null,
       longitude: center.longitude ?? null,
       dailyCapacity: center.dailyCapacity,
@@ -210,6 +213,7 @@ export class AdminCentersComponent implements OnInit {
       name: value.name!,
       city: value.city!,
       address: value.address || '',
+      phone: value.phone?.trim() || '',
       latitude: Number(value.latitude),
       longitude: Number(value.longitude),
       dailyCapacity: Number(value.dailyCapacity),
@@ -226,6 +230,7 @@ export class AdminCentersComponent implements OnInit {
       name: center.name,
       city: center.city,
       address: center.address || '',
+      phone: center.phone || '',
       latitude: center.latitude!,
       longitude: center.longitude!,
       dailyCapacity: center.dailyCapacity,

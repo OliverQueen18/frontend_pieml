@@ -61,7 +61,37 @@
 
       @if (dossier.payment) {
         <h2>Paiement</h2>
-        <p>Total : <strong>{{ dossier.payment.totalAmount | number }} FCFA</strong> — {{ dossier.payment.status }}</p>
+        <div class="info-grid">
+          <div><small>Total</small><strong>{{ dossier.payment.totalAmount | number }} FCFA</strong></div>
+          <div><small>Statut</small><strong>{{ dossier.payment.status }}</strong></div>
+          @if (dossier.payment.vehicleTypeLabel) {
+            <div><small>Type d'engin</small><strong>{{ dossier.payment.vehicleTypeLabel }}</strong></div>
+          }
+          @if (dossier.payment.centerName) {
+            <div><small>Centre</small><strong>{{ dossier.payment.centerCity }} — {{ dossier.payment.centerName }}</strong></div>
+          }
+        </div>
+      }
+
+      @if (dossier.plateDelivery; as plate) {
+        <section class="declaration-summary">
+          <h2>Remise de la plaque</h2>
+          <div class="declaration-info">
+            <p><strong>N° plaque :</strong> {{ plate.plateNumber }}</p>
+            <p><strong>Date de remise :</strong> {{ plate.deliveryDate | date:'dd/MM/yyyy' }}</p>
+            <p><strong>Retirant :</strong> {{ plate.collectorFirstName }} {{ plate.collectorLastName }}</p>
+            <p><strong>Téléphone :</strong> {{ plate.collectorPhone }}</p>
+            <p><strong>Adresse :</strong> {{ plate.collectorAddress }}</p>
+            @if (plate.fileName) {
+              <p><strong>Justificatif :</strong> {{ plate.fileName }}</p>
+            }
+          </div>
+          @if (plate.fileName) {
+            <button type="button" class="btn btn-outline" (click)="openPlateDeliveryFile()">
+              <i class="pi pi-eye"></i> Voir la pièce justificative
+            </button>
+          }
+        </section>
       }
 
       @if (canDeclare()) {
@@ -160,7 +190,7 @@
   </div>
 }
 
-@if (previewDoc || previewIsDeclaration) {
+@if (previewDoc || previewIsDeclaration || previewIsPlateDelivery) {
   <div class="dialog-backdrop" (click)="closePreview()" role="presentation">
     <div
       class="dialog doc-preview-dialog"
