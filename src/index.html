@@ -7,6 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-pieml.png">
   <link rel="apple-touch-icon" href="favicon-pieml.png">
+  <script>
+    (function () {
+      var host = location.hostname;
+      var isLocal = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+      if (location.protocol === 'http:' && !isLocal) {
+        location.replace(location.href.replace(/^http:/, 'https:'));
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

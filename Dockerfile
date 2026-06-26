@@ -14,7 +14,8 @@ RUN npm run build:${BUILD_CONFIGURATION}
 FROM nginx:1.27-alpine
 
 ENV BACKEND_HOST=pieml-backend \
-    BACKEND_PORT=7000
+    BACKEND_PORT=7000 \
+    FORCE_HTTPS_REDIRECT=false
 
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist/pieml-frontend/browser /usr/share/nginx/html
