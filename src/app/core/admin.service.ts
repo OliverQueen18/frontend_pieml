@@ -147,12 +147,24 @@ export class AdminService {
     return this.api.get<AdminUserDto[]>(`/admin/users`);
   }
 
-  createUser(data: { email: string; phone: string; password: string; role: string; centerIds?: number[] }) {
+  createUser(data: {
+    email: string;
+    phone: string;
+    password: string;
+    role: string;
+    firstName: string;
+    lastName: string;
+    address?: string;
+    centerIds?: number[];
+  }) {
     const payload: Record<string, unknown> = {
       email: data.email,
       phone: data.phone,
       password: data.password,
-      role: data.role
+      role: data.role,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      address: data.address || ''
     };
     if (data.centerIds?.length) {
       payload['centerIds'] = data.centerIds;
@@ -160,7 +172,16 @@ export class AdminService {
     return this.api.post<AdminUserDto>('/admin/users', payload);
   }
 
-  updateUser(id: number, data: Partial<{ phone: string; role: string; enabled: boolean; password: string; centerIds: number[] }>) {
+  updateUser(id: number, data: Partial<{
+    phone: string;
+    firstName: string;
+    lastName: string;
+    address: string;
+    role: string;
+    enabled: boolean;
+    password: string;
+    centerIds: number[];
+  }>) {
     return this.api.put<AdminUserDto>(`/admin/users/${id}`, data);
   }
 

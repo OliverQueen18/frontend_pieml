@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angu
 import { AdminService } from '../../core/admin.service';
 import { AuthService } from '../../core/auth.service';
 import { groupPermissionsByCategory, PERMISSIONS, PermissionDto } from '../../core/permissions';
-import { ROLE_LABELS, ROLES } from '../../core/roles';
+import { ROLE_LABELS, ROLES, ROLE_DESCRIPTIONS } from '../../core/roles';
 import { AdminRoleDto } from '../../models';
 
 @Component({
@@ -33,6 +33,7 @@ export class AdminRolesComponent implements OnInit {
   togglingId: number | null = null;
   savingPermissions = false;
   roleLabels = ROLE_LABELS;
+  roleDescriptions = ROLE_DESCRIPTIONS;
   allRoleCodes = Object.values(ROLES);
   readonly ROLES = ROLES;
   readonly canManagePermissions = () => this.auth.hasPermission(PERMISSIONS.ROLES_MANAGE);
@@ -69,6 +70,15 @@ export class AdminRolesComponent implements OnInit {
 
   get canCreateRole(): boolean {
     return this.availableCodesForCreate.length > 0;
+  }
+
+  get predefinedRoleCount(): number {
+    return this.allRoleCodes.length;
+  }
+
+  roleDescription(code: string): string {
+    const role = this.roles.find(r => r.code === code);
+    return role?.description || this.roleDescriptions[code] || '';
   }
 
   get availableCodesForCreate(): string[] {

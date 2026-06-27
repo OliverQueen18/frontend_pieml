@@ -1,6 +1,70 @@
 @use './admin-page';
 @import '../../shared/dialog.scss';
 
+.roles-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.roles-legend-card {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(30, 58, 95, 0.12);
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+
+  strong {
+    display: block;
+    color: var(--pie-navy);
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--pie-muted);
+    line-height: 1.45;
+  }
+
+  &.accent-admin {
+    border-left: 4px solid var(--pie-navy);
+  }
+
+  &.accent-user {
+    border-left: 4px solid var(--pie-green);
+  }
+
+  &.accent-public {
+    border-left: 4px solid #d97706;
+  }
+}
+
+.roles-legend-icon {
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #f1f5f9;
+  color: var(--pie-navy);
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.desc-cell {
+  max-width: 280px;
+  color: var(--pie-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 // Styles spécifiques rôles / permissions (le reste est centralisé)
 
 .perm-option small {

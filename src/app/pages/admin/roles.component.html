@@ -5,7 +5,30 @@
       <h2>Gestion des rôles</h2>
       <p>Configurez les libellés des rôles et attribuez les fonctionnalités accessibles à chaque profil.</p>
     </div>
-    
+  </div>
+
+  <div class="roles-legend">
+    <article class="roles-legend-card accent-admin">
+      <span class="roles-legend-icon"><i class="pi pi-building"></i></span>
+      <div>
+        <strong>Gestionnaire de Centre</strong>
+        <p>Gère un centre et peut créer des comptes Public, validateurs et immatriculateurs.</p>
+      </div>
+    </article>
+    <article class="roles-legend-card accent-user">
+      <span class="roles-legend-icon"><i class="pi pi-user"></i></span>
+      <div>
+        <strong>Utilisateur</strong>
+        <p>Consultation opérationnelle : dossiers, citoyens et notifications.</p>
+      </div>
+    </article>
+    <article class="roles-legend-card accent-public">
+      <span class="roles-legend-icon"><i class="pi pi-chart-bar"></i></span>
+      <div>
+        <strong>Public</strong>
+        <p>Visualisation des statistiques uniquement.</p>
+      </div>
+    </article>
   </div>
 
 
@@ -47,6 +70,8 @@
 
             <th>LIBELLÉ</th>
 
+            <th>DESCRIPTION</th>
+
             <th>PERMISSIONS</th>
 
             <th>UTILISATEURS</th>
@@ -76,6 +101,8 @@
                 @if (r.systemRole) { <span class="badge role system">Système</span> }
 
               </td>
+
+              <td class="desc-cell">{{ roleDescription(r.code) || '—' }}</td>
 
               <td>{{ permissionCount(r) }} fonctionnalité(s)</td>
 
@@ -119,7 +146,7 @@
 
           } @empty {
 
-            <tr><td colspan="7" class="empty">
+            <tr><td colspan="8" class="empty">
               Aucun rôle configuré.
               @if (availableCodesForCreate.length) {
                 <button type="button" class="btn btn-primary btn-sm empty-create-btn" (click)="openCreate()">
@@ -269,7 +296,7 @@
         @if (!editingId && !canCreateRole) {
           <div class="form-group full">
             <div class="alert error create-role-alert">
-              Les 5 rôles prédéfinis sont déjà configurés. Utilisez <strong>Modifier</strong> ou <strong>Permissions</strong> pour personnaliser un rôle existant.
+              Les {{ predefinedRoleCount }} rôles prédéfinis sont déjà configurés. Utilisez <strong>Modifier</strong> ou <strong>Permissions</strong> pour personnaliser un rôle existant.
             </div>
           </div>
         } @else {

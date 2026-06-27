@@ -1,7 +1,7 @@
 <div class="admin-page">
   <div class="page-header">
     <h2>Comptes staff</h2>
-    <p>Gérez les administrateurs, validateurs et immatriculateurs.</p>
+    <p>Gérez les gestionnaires de centre, validateurs, immatriculateurs, utilisateurs et comptes publics.</p>
   </div>
 
   @if (error) { <div class="alert error">{{ error }}</div> }
@@ -29,6 +29,7 @@
         <thead>
           <tr>
             <th>PRÉNOM & NOM</th>
+            <th>ADRESSE</th>
             <th>EMAIL</th>
             <th>TÉLÉPHONE</th>
             <th>RÔLE</th>
@@ -42,6 +43,7 @@
           @for (u of filteredUsers; track u.id) {
             <tr [class.inactive-row]="!u.enabled">
               <td><strong>{{ fullName(u) }}</strong></td>
+              <td class="address-cell">{{ u.address || '—' }}</td>
               <td>{{ u.email }}</td>
               <td>{{ u.phone }}</td>
               <td><span class="badge role">{{ roleLabels[u.role] || u.role }}</span></td>
@@ -119,7 +121,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="8" class="empty">
+              <td colspan="9" class="empty">
                 @if (searchQuery.trim()) {
                   Aucun compte ne correspond à votre recherche.
                 } @else {
@@ -135,7 +137,7 @@
 </div>
 
 @if (showForm) {
-  <div class="dialog-backdrop" (click)="cancelForm()" role="presentation">
+  <div class="dialog-backdrop user-form-backdrop" (click)="cancelForm()" role="presentation">
     <div
       class="dialog user-form-dialog"
       role="dialog"
@@ -143,12 +145,17 @@
       [attr.aria-labelledby]="editingId ? 'edit-user-title' : 'create-user-title'"
       (click)="$event.stopPropagation()">
 
-      <header class="dialog-header">
-        <div>
-          <h2 [id]="editingId ? 'edit-user-title' : 'create-user-title'">
-            {{ editingId ? 'Modifier le compte' : 'Nouveau compte staff' }}
-          </h2>
-          <p>Définissez l'email, le rôle et les accès de l'utilisateur.</p>
+      <div class="user-form-accent" aria-hidden="true"></div>
+
+      <header class="dialog-header user-form-header">
+        <div class="user-form-intro">
+          <span class="user-form-icon" aria-hidden="true"><i class="pi pi-user-plus"></i></span>
+          <div>
+            <h2 [id]="editingId ? 'edit-user-title' : 'create-user-title'">
+              {{ editingId ? 'Modifier le compte' : 'Nouveau compte staff' }}
+            </h2>
+            <p>Identité, coordonnées, rôle et accès à la plateforme.</p>
+          </div>
         </div>
         <button type="button" class="close-btn" (click)="cancelForm()" aria-label="Fermer">
           <i class="pi pi-times"></i>
@@ -156,61 +163,127 @@
       </header>
 
       @if (formError) {
-        <div class="alert error form-alert">{{ formError }}</div>
+        <div class="alert error form-alert user-form-alert">{{ formError }}</div>
       }
 
-      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid modal-form">
-        <div class="form-group">
-          <label for="user-email">Email</label>
-          <input id="user-email" type="email" formControlName="email">
-          @if (form.controls.email.invalid && form.controls.email.touched) {
-            <small class="field-error">Email invalide ou requis.</small>
-          }
+      <form [formGroup]="form" (ngSubmit)="submit()" class="user-form">
+        <div class="user-form-body">
+          <section class="form-section">
+            <h3 class="form-section-title">Identité</h3>
+            <div class="form-panel">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="user-firstName">Prénom</label>
+                  <div class="field-control">
+                    <i class="pi pi-user field-icon" aria-hidden="true"></i>
+                    <input id="user-firstName" formControlName="firstName" placeholder="Prénom">
+                  </div>
+                  @if (form.controls.firstName.invalid && form.controls.firstName.touched) {
+                    <small class="field-error">Prénom requis.</small>
+                  }
+                </div>
+                <div class="form-group">
+                  <label for="user-lastName">Nom</label>
+                  <div class="field-control">
+                    <i class="pi pi-user field-icon" aria-hidden="true"></i>
+                    <input id="user-lastName" formControlName="lastName" placeholder="Nom">
+                  </div>
+                  @if (form.controls.lastName.invalid && form.controls.lastName.touched) {
+                    <small class="field-error">Nom requis.</small>
+                  }
+                </div>
+                <div class="form-group full">
+                  <label for="user-address">Adresse</label>
+                  <div class="field-control field-control--textarea">
+                    <i class="pi pi-map-marker field-icon field-icon--textarea" aria-hidden="true"></i>
+                    <textarea id="user-address" formControlName="address" rows="2" placeholder="Adresse complète (facultatif)"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h3 class="form-section-title">Connexion & contact</h3>
+            <div class="form-panel">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="user-email">Email</label>
+                  <div class="field-control">
+                    <i class="pi pi-envelope field-icon" aria-hidden="true"></i>
+                    <input id="user-email" type="email" formControlName="email" placeholder="nom@domaine.ml">
+                  </div>
+                  @if (form.controls.email.invalid && form.controls.email.touched) {
+                    <small class="field-error">Email invalide ou requis.</small>
+                  }
+                </div>
+                <div class="form-group">
+                  <label for="user-phone">Téléphone</label>
+                  <div class="field-control">
+                    <i class="pi pi-phone field-icon" aria-hidden="true"></i>
+                    <input id="user-phone" formControlName="phone" placeholder="+223 XX XX XX XX">
+                  </div>
+                  @if (form.controls.phone.invalid && form.controls.phone.touched) {
+                    <small class="field-error">Téléphone requis.</small>
+                  }
+                </div>
+                <div class="form-group full">
+                  <label for="user-password">
+                    Mot de passe {{ editingId ? '(laisser vide pour conserver)' : '' }}
+                  </label>
+                  <div class="field-control">
+                    <i class="pi pi-lock field-icon" aria-hidden="true"></i>
+                    <input id="user-password" type="password" formControlName="password" placeholder="Minimum 8 caractères">
+                  </div>
+                  @if (!editingId && form.controls.password.invalid && form.controls.password.touched) {
+                    <small class="field-error">Mot de passe requis (8 caractères minimum).</small>
+                  }
+                  @if (editingId && form.controls.password.value && form.controls.password.invalid && form.controls.password.touched) {
+                    <small class="field-error">8 caractères minimum.</small>
+                  }
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h3 class="form-section-title">Rôle & statut</h3>
+            <div class="form-panel">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="user-role">Rôle</label>
+                  <div class="field-control">
+                    <i class="pi pi-shield field-icon" aria-hidden="true"></i>
+                    <select id="user-role" formControlName="role">
+                      @for (r of creatableRoles; track r) {
+                        <option [value]="r">{{ roleLabels[r] }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+                @if (editingId) {
+                  <div class="form-group checkbox-group">
+                    <label class="checkbox-card">
+                      <input type="checkbox" formControlName="enabled">
+                      <span>
+                        <strong>Compte actif</strong>
+                        <small>L'utilisateur peut se connecter</small>
+                      </span>
+                    </label>
+                  </div>
+                }
+              </div>
+            </div>
+          </section>
         </div>
-        <div class="form-group">
-          <label for="user-phone">Téléphone</label>
-          <input id="user-phone" formControlName="phone">
-          @if (form.controls.phone.invalid && form.controls.phone.touched) {
-            <small class="field-error">Téléphone requis.</small>
-          }
-        </div>
-        <div class="form-group">
-          <label for="user-password">
-            Mot de passe {{ editingId ? '(laisser vide pour conserver)' : '' }}
-          </label>
-          <input id="user-password" type="password" formControlName="password">
-          @if (!editingId && form.controls.password.invalid && form.controls.password.touched) {
-            <small class="field-error">Mot de passe requis (8 caractères minimum).</small>
-          }
-          @if (editingId && form.controls.password.value && form.controls.password.invalid && form.controls.password.touched) {
-            <small class="field-error">8 caractères minimum.</small>
-          }
-        </div>
-        <div class="form-group">
-          <label for="user-role">Rôle</label>
-          <select id="user-role" formControlName="role">
-            @for (r of staffRoles; track r) {
-              <option [value]="r">{{ roleLabels[r] }}</option>
-            }
-          </select>
-        </div>
-        @if (editingId) {
-          <div class="form-group checkbox-group">
-            <label class="checkbox-card">
-              <input type="checkbox" formControlName="enabled">
-              <span>
-                <strong>Compte actif</strong>
-                <small>L'utilisateur peut se connecter</small>
-              </span>
-            </label>
-          </div>
-        }
-        <div class="form-group full modal-actions">
+
+        <footer class="modal-actions user-form-actions">
           <button type="button" class="btn btn-outline" (click)="cancelForm()" [disabled]="submitting">Annuler</button>
           <button type="submit" class="btn btn-primary" [disabled]="form.invalid || submitting">
+            <i class="pi" [class.pi-check]="editingId" [class.pi-plus]="!editingId" aria-hidden="true"></i>
             {{ submitting ? 'Enregistrement…' : (editingId ? 'Enregistrer' : 'Créer le compte') }}
           </button>
-        </div>
+        </footer>
       </form>
     </div>
   </div>
@@ -347,6 +420,10 @@
           <div class="detail-item">
             <span class="detail-label">Nom</span>
             <span class="detail-value">{{ user.lastName || '—' }}</span>
+          </div>
+          <div class="detail-item span-2">
+            <span class="detail-label">Adresse</span>
+            <span class="detail-value">{{ user.address || '—' }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">Email</span>

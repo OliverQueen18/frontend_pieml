@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { AdminService } from '../../core/admin.service';
 import { AuthService } from '../../core/auth.service';
-import { ROLE_LABELS, ROLES } from '../../core/roles';
+import { ROLE_LABELS, ROLES, creatableStaffRoles } from '../../core/roles';
 import { AdminUserDto, CenterDto } from '../../models';
 
 @Component({
@@ -37,16 +37,22 @@ export class AdminUsersComponent implements OnInit {
   selectedCenterIds: number[] = [];
   centersSearchQuery = '';
   roleLabels = ROLE_LABELS;
-  staffRoles = [ROLES.ADMIN, ROLES.VALIDATEUR, ROLES.IMMATRICULATEUR, ROLES.SUPER_ADMIN];
   readonly ROLES = ROLES;
 
   form = this.fb.group({
+    firstName: ['', Validators.required],
+    lastName: ['', Validators.required],
+    address: [''],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', Validators.required],
     password: ['', [Validators.minLength(8)]],
     role: [ROLES.VALIDATEUR as string, Validators.required],
     enabled: [true]
   });
+
+  get creatableRoles(): string[] {
+    return creatableStaffRoles(this.auth.role());
+  }
 
   ngOnInit() {
     this.load();
@@ -62,6 +68,7 @@ export class AdminUsersComponent implements OnInit {
     return this.users.filter(u =>
       u.firstName.toLowerCase().includes(q) ||
       u.lastName.toLowerCase().includes(q) ||
+      (u.address || '').toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
       u.phone.toLowerCase().includes(q) ||
       (this.roleLabels[u.role] || u.role).toLowerCase().includes(q) ||
@@ -145,7 +152,13 @@ export class AdminUsersComponent implements OnInit {
     this.editingId = null;
     this.formError = '';
     this.showForm = true;
-    this.form.reset({ role: ROLES.VALIDATEUR, enabled: true });
+    this.form.reset({
+      firstName: '',
+      lastName: '',
+      address: '',
+      role: this.creatableRoles[0] ?? ROLES.VALIDATEUR,
+      enabled: true
+    });
     this.form.controls.email.enable();
     this.setCreatePasswordValidators();
   }
@@ -157,6 +170,9 @@ export class AdminUsersComponent implements OnInit {
     this.formError = '';
     this.showForm = true;
     this.form.patchValue({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      address: user.address || '',
       email: user.email,
       phone: user.phone,
       role: user.role,
@@ -263,9 +279,15 @@ export class AdminUsersComponent implements OnInit {
     this.submitting = true;
     const value = this.form.getRawValue();
     const phone = (value.phone ?? '').toString().trim();
+    const firstName = (value.firstName ?? '').toString().trim();
+    const lastName = (value.lastName ?? '').toString().trim();
+    const address = (value.address ?? '').toString().trim();
 
     if (this.editingId) {
       const payload: Record<string, unknown> = {
+        firstName,
+        lastName,
+        address,
         phone,
         role: value.role,
         enabled: value.enabled
@@ -298,6 +320,9 @@ export class AdminUsersComponent implements OnInit {
       this.admin.createUser({
         email,
         phone,
+        firstName,
+        lastName,
+        address,
         password,
         role: value.role!
       }).subscribe({

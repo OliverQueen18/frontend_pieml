@@ -356,6 +356,7 @@ export interface AdminUserDto {
   mustChangePassword?: boolean;
   centerIds?: number[];
   centerNames?: string[];
+  address?: string;
 }
 
 export interface AdminCitizenDto {
