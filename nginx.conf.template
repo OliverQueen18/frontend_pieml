@@ -20,6 +20,12 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
+        # Requêtes same-origin via le proxy : évite le rejet CORS côté Spring
+        # quand CORS_ORIGINS n'est pas encore aligné sur le domaine public.
+        proxy_set_header Origin "";
+
+        proxy_read_timeout 120s;
+
     }
 
     location / {
