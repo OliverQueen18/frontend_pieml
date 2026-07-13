@@ -1,219 +1,192 @@
-<div class="dashboard admin-dashboard">
+<div class="dashboard admin-dashboard" [class.menu-open]="menuOpen">
 
-  <aside class="sidebar">
+  @if (menuOpen) {
+    <button type="button" class="sidebar-backdrop" (click)="closeMenu()" aria-label="Fermer le menu"></button>
+  }
 
-    <a routerLink="/" class="sidebar-brand">
+  <aside class="sidebar" [class.open]="menuOpen" id="admin-sidebar">
 
-      <img src="assets/logo-pieml-ssfond.png" alt="" class="sidebar-logo-img">
+    <div class="sidebar-header">
+      <a routerLink="/" class="sidebar-brand" (click)="closeMenu()">
+        <img src="assets/logo-pieml-ssfond.png" alt="" class="sidebar-logo-img">
+      </a>
+      <button type="button" class="sidebar-close" (click)="closeMenu()" aria-label="Fermer le menu">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
 
-    </a>
-
-
-
-    <nav class="sidebar-nav">
+    <nav class="sidebar-nav" (click)="onNavClick($event)">
 
       @if (auth.hasPermission(P.ADMIN_DASHBOARD_VIEW)) {
-
-        <a routerLink="/administration" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-
+        <a routerLink="/administration" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+          (click)="closeMenu()">
           <i class="pi pi-home"></i> Tableau de bord
-
         </a>
-
       }
-
-
 
       @if (auth.hasPermission(P.DOSSIERS_VIEW)) {
-
         <div class="nav-section">DOSSIERS</div>
-
-        <a routerLink="/administration/dossiers" routerLinkActive="active">
-
+        <a
+          routerLink="/administration/dossiers"
+          routerLinkActive="active"
+          class="nav-link-with-badge"
+          [attr.title]="pendingDossiersCount > 0 ? pendingDossiersCount + ' dossier(s) en attente' : 'Tous les dossiers'"
+          (click)="closeMenu()">
           <i class="pi pi-folder"></i> Tous les dossiers
-
+          @if (pendingDossiersCount > 0) {
+            <span class="nav-badge" [attr.aria-label]="pendingDossiersCount + ' dossiers en attente'">{{ pendingDossiersCount }}</span>
+          }
         </a>
-
       }
 
-
-
       @if (auth.hasPermission(P.CITIZENS_VIEW) || auth.hasPermission(P.USERS_VIEW)) {
-
         <div class="nav-section">UTILISATEURS</div>
 
         @if (auth.hasPermission(P.CITIZENS_VIEW)) {
-
-          <a routerLink="/administration/citoyens" routerLinkActive="active">
-
+          <a routerLink="/administration/citoyens" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-users"></i> Citoyens
-
           </a>
 
           <a
             routerLink="/administration/reclamations-profil"
             routerLinkActive="active"
             class="nav-link-with-badge"
-            [attr.title]="pendingClaimsCount > 0 ? pendingClaimsCount + ' réclamation(s) en attente' : 'Réclamations de profil'">
-
+            [attr.title]="pendingClaimsCount > 0 ? pendingClaimsCount + ' réclamation(s) en attente' : 'Réclamations de profil'"
+            (click)="closeMenu()">
             <i class="pi pi-inbox"></i> Réclamations profil
-
             @if (pendingClaimsCount > 0) {
-              <span class="nav-badge" [attr.aria-label]="pendingClaimsCount + ' en attente'">{{ pendingClaimsCount }}</span>
+              <span class="nav-badge" [attr.aria-label]="pendingClaimsCount + ' réclamations en attente'">{{ pendingClaimsCount }}</span>
             }
-
           </a>
-
         }
 
         @if (auth.hasPermission(P.USERS_VIEW)) {
-
-          <a routerLink="/administration/utilisateurs" routerLinkActive="active">
-
+          <a routerLink="/administration/utilisateurs" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-id-card"></i> Comptes staff
-
           </a>
-
         }
-
       }
 
-
-
       @if (auth.hasAnyPermission(P.CENTERS_VIEW, P.TYPE_DOCUMENTS_VIEW, P.VEHICLE_BRANDS_VIEW, P.VEHICLE_TYPES_VIEW, P.ROLES_VIEW, P.NOTIFICATIONS_VIEW, P.PAYMENTS_VIEW, P.TARIFFS_VIEW)) {
-
         <div class="nav-section">CONFIGURATION</div>
 
         @if (auth.hasPermission(P.CENTERS_VIEW)) {
-
-          <a routerLink="/administration/centres" routerLinkActive="active">
-
+          <a routerLink="/administration/centres" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-map-marker"></i> Centres
-
           </a>
-
         }
 
         @if (auth.hasPermission(P.TYPE_DOCUMENTS_VIEW)) {
-
-          <a routerLink="/administration/types-documents" routerLinkActive="active">
-
+          <a routerLink="/administration/types-documents" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-file"></i> Types de documents
-
           </a>
-
         }
 
         @if (auth.hasPermission(P.VEHICLE_BRANDS_VIEW)) {
-
-          <a routerLink="/administration/marques" routerLinkActive="active">
-
+          <a routerLink="/administration/marques" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-star"></i> Marques
-
           </a>
-
         }
 
         @if (auth.hasPermission(P.VEHICLE_TYPES_VIEW)) {
-
-          <a routerLink="/administration/types-engins" routerLinkActive="active">
-
+          <a routerLink="/administration/types-engins" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-car"></i> Types d'engins
-
           </a>
-
         }
 
         @if (auth.hasPermission(P.ROLES_VIEW)) {
-
-          <a routerLink="/administration/roles" routerLinkActive="active">
-
+          <a routerLink="/administration/roles" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-shield"></i> Rôles
-
           </a>
-
         }
 
         @if (auth.hasPermission(P.NOTIFICATIONS_VIEW)) {
-
-          <a routerLink="/administration/notifications" routerLinkActive="active">
-
+          <a routerLink="/administration/notifications" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-bell"></i> Notifications
-
           </a>
-
         }
 
         @if (auth.hasPermission(P.PAYMENTS_VIEW)) {
-
-          <a routerLink="/administration/paiements" routerLinkActive="active">
-
+          <a routerLink="/administration/paiements" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-wallet"></i> Paiements
-
           </a>
-
         }
 
         @if (auth.hasPermission(P.PAYMENTS_VIEW)) {
-
-          <a routerLink="/administration/situation-recettes" routerLinkActive="active">
-
+          <a routerLink="/administration/situation-recettes" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-chart-bar"></i> Situation des recettes
-
           </a>
-
         }
 
         @if (auth.hasPermission(P.TARIFFS_VIEW)) {
-
-          <a routerLink="/administration/tarifs" routerLinkActive="active">
-
+          <a routerLink="/administration/tarifs" routerLinkActive="active" (click)="closeMenu()">
             <i class="pi pi-tag"></i> Tarifs
-
           </a>
-
         }
-
       }
 
     </nav>
 
-
-
     <button class="logout-btn" (click)="logout()">
-
       <i class="pi pi-sign-out"></i> Se déconnecter
-
     </button>
 
   </aside>
 
-
-
   <main class="main">
 
     <header class="topbar">
-
-      <h1>Administration PIEML</h1>
-
-      <div class="user-info">
-
-        <span class="role-badge">{{ roleLabels[auth.role() || ''] || auth.role() }}</span>
-
-        <span class="welcome">Bienvenue, <strong>{{ auth.fullName() }}</strong></span>
-
-        <button type="button" class="avatar" (click)="logout()" aria-label="Se déconnecter" title="Se déconnecter">
-          {{ auth.user()?.firstName?.charAt(0) }}{{ auth.user()?.lastName?.charAt(0) || auth.user()?.email?.charAt(0) }}
+      <div class="topbar-left">
+        <button
+          type="button"
+          class="menu-toggle"
+          (click)="toggleMenu()"
+          [attr.aria-expanded]="menuOpen"
+          aria-controls="admin-sidebar"
+          aria-label="Ouvrir le menu">
+          <i class="pi pi-bars"></i>
         </button>
-
+        <h1>Administration PIEML</h1>
       </div>
 
+      <div class="user-info">
+        <span class="role-badge">{{ roleLabels[auth.role() || ''] || auth.role() }}</span>
+        <span class="welcome">Bienvenue, <strong>{{ auth.fullName() }}</strong></span>
+
+        <div class="profile-menu" [class.open]="profileMenuOpen">
+          <button
+            type="button"
+            class="avatar"
+            (click)="toggleProfileMenu($event)"
+            [attr.aria-expanded]="profileMenuOpen"
+            aria-haspopup="menu"
+            aria-controls="admin-profile-menu"
+            aria-label="Menu profil">
+            {{ auth.user()?.firstName?.charAt(0) }}{{ auth.user()?.lastName?.charAt(0) || auth.user()?.email?.charAt(0) }}
+          </button>
+
+          @if (profileMenuOpen) {
+            <div
+              id="admin-profile-menu"
+              class="profile-dropdown"
+              role="menu"
+              (click)="$event.stopPropagation()">
+              <div class="profile-dropdown-header">
+                <strong>{{ auth.fullName() }}</strong>
+                <span>{{ roleLabels[auth.role() || ''] || auth.role() }}</span>
+                <span class="profile-email">{{ auth.user()?.email }}</span>
+              </div>
+              <button type="button" class="profile-dropdown-item danger" role="menuitem" (click)="logout()">
+                <i class="pi pi-sign-out"></i> Se déconnecter
+              </button>
+            </div>
+          }
+        </div>
+      </div>
     </header>
 
     <div class="content">
-
       <router-outlet />
-
     </div>
 
   </main>
@@ -221,4 +194,3 @@
   <app-pieml-chatbot context="admin" />
 
 </div>
-

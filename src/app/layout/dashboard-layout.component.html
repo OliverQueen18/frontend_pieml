@@ -1,19 +1,29 @@
-<div class="dashboard">
-  <aside class="sidebar">
-    <a routerLink="/" class="sidebar-brand">
-      <img src="assets/logo-pieml-ssfond.png" alt="" class="sidebar-logo-img">
-    </a>
+<div class="dashboard" [class.menu-open]="menuOpen">
+
+  @if (menuOpen) {
+    <button type="button" class="sidebar-backdrop" (click)="closeMenu()" aria-label="Fermer le menu"></button>
+  }
+
+  <aside class="sidebar" [class.open]="menuOpen" id="citizen-sidebar">
+    <div class="sidebar-header">
+      <a routerLink="/" class="sidebar-brand" (click)="closeMenu()">
+        <img src="assets/logo-pieml-ssfond.png" alt="" class="sidebar-logo-img">
+      </a>
+      <button type="button" class="sidebar-close" (click)="closeMenu()" aria-label="Fermer le menu">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
 
     <nav class="sidebar-nav">
-      <a routerLink="/tableau-de-bord" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+      <a routerLink="/tableau-de-bord" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">
         <i class="pi pi-home"></i> Tableau de bord
       </a>
 
       <div class="nav-section">MON DOSSIER</div>
-      <a routerLink="/tableau-de-bord/nouvelle-demande" routerLinkActive="active">
+      <a routerLink="/tableau-de-bord/nouvelle-demande" routerLinkActive="active" (click)="closeMenu()">
         <i class="pi pi-plus-circle"></i> Nouvelle demande
       </a>
-      <a routerLink="/tableau-de-bord" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+      <a routerLink="/tableau-de-bord" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">
         <i class="pi pi-folder"></i> Mes demandes
       </a>
       <button type="button" class="nav-btn" (click)="openTrackDialog()">
@@ -21,18 +31,18 @@
       </button>
 
       <div class="nav-section">MON COMPTE</div>
-      <a routerLink="/tableau-de-bord/profil" routerLinkActive="active">
+      <a routerLink="/tableau-de-bord/profil" routerLinkActive="active" (click)="closeMenu()">
         <i class="pi pi-user"></i> Profil
       </a>
-      <a routerLink="/tableau-de-bord/securite" routerLinkActive="active">
+      <a routerLink="/tableau-de-bord/securite" routerLinkActive="active" (click)="closeMenu()">
         <i class="pi pi-lock"></i> Sécurité
       </a>
 
       <div class="nav-section">AIDE & SUPPORT</div>
-      <a routerLink="/tableau-de-bord/faq" routerLinkActive="active">
+      <a routerLink="/tableau-de-bord/faq" routerLinkActive="active" (click)="closeMenu()">
         <i class="pi pi-question-circle"></i> FAQ
       </a>
-      <a routerLink="/tableau-de-bord/contact" routerLinkActive="active">
+      <a routerLink="/tableau-de-bord/contact" routerLinkActive="active" (click)="closeMenu()">
         <i class="pi pi-envelope"></i> Nous contacter
       </a>
     </nav>
@@ -44,12 +54,55 @@
 
   <main class="main">
     <header class="topbar">
-      <h1>Espace citoyen</h1>
+      <div class="topbar-left">
+        <button
+          type="button"
+          class="menu-toggle"
+          (click)="toggleMenu()"
+          [attr.aria-expanded]="menuOpen"
+          aria-controls="citizen-sidebar"
+          aria-label="Ouvrir le menu">
+          <i class="pi pi-bars"></i>
+        </button>
+        <h1>Espace citoyen</h1>
+      </div>
       <div class="user-info">
         <span class="welcome">Bienvenue, <strong>{{ auth.fullName() }}</strong></span>
-        <button type="button" class="avatar" (click)="logout()" aria-label="Se déconnecter" title="Se déconnecter">
-          {{ auth.user()?.firstName?.charAt(0) }}{{ auth.user()?.lastName?.charAt(0) }}
-        </button>
+
+        <div class="profile-menu" [class.open]="profileMenuOpen">
+          <button
+            type="button"
+            class="avatar"
+            (click)="toggleProfileMenu($event)"
+            [attr.aria-expanded]="profileMenuOpen"
+            aria-haspopup="menu"
+            aria-controls="citizen-profile-menu"
+            aria-label="Menu profil">
+            {{ auth.user()?.firstName?.charAt(0) }}{{ auth.user()?.lastName?.charAt(0) }}
+          </button>
+
+          @if (profileMenuOpen) {
+            <div
+              id="citizen-profile-menu"
+              class="profile-dropdown"
+              role="menu"
+              (click)="$event.stopPropagation()">
+              <div class="profile-dropdown-header">
+                <strong>{{ auth.fullName() }}</strong>
+                <span class="profile-email">{{ auth.user()?.email }}</span>
+              </div>
+              <a routerLink="/tableau-de-bord/profil" role="menuitem" class="profile-dropdown-item" (click)="closeProfileMenu()">
+                <i class="pi pi-user"></i> Mon profil
+              </a>
+              <a routerLink="/tableau-de-bord/securite" role="menuitem" class="profile-dropdown-item" (click)="closeProfileMenu()">
+                <i class="pi pi-lock"></i> Sécurité
+              </a>
+              <button type="button" class="profile-dropdown-item danger" role="menuitem" (click)="logout()">
+                <i class="pi pi-sign-out"></i> Se déconnecter
+              </button>
+            </div>
+          }
+        </div>
       </div>
     </header>
     <div class="content">
