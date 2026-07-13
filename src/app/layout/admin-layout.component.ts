@@ -6,11 +6,12 @@ import { AdminService } from '../core/admin.service';
 import { PERMISSIONS } from '../core/permissions';
 import { ROLE_LABELS } from '../core/roles';
 import { PiemlChatbotComponent } from '../shared/chatbot/pieml-chatbot.component';
+import { VersionFooterComponent } from '../shared/version-footer.component';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, PiemlChatbotComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, PiemlChatbotComponent, VersionFooterComponent],
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.scss'
 })

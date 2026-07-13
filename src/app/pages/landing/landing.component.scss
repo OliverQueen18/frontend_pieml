@@ -1096,6 +1096,13 @@
   margin-top: 0.5rem;
 }
 
+.footer-version {
+  font-size: 0.7rem;
+  opacity: 0.45;
+  margin: 0;
+  letter-spacing: 0.03em;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .features-grid { grid-template-columns: repeat(3, 1fr); }

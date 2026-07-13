@@ -10,6 +10,7 @@ import { TrackDossierDialogComponent } from '../../shared/track-dossier-dialog.c
 import { ContactDialogComponent } from '../../shared/contact-dialog.component';
 import { FaqAccordionComponent } from '../../shared/faq-accordion.component';
 import { PiemlChatbotComponent } from '../../shared/chatbot/pieml-chatbot.component';
+import { APP_VERSION } from '../../core/app-version';
 
 @Component({
   selector: 'app-landing',
@@ -29,6 +30,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   logoHeight = 120;
   mobileMenuOpen = false;
   currentYear = new Date().getFullYear();
+  readonly appVersion = APP_VERSION;
   activeHeroSlide = 0;
 
   heroSlides = [

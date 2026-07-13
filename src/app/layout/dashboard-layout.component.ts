@@ -4,11 +4,12 @@ import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../core/auth.service';
 import { TrackDossierDialogComponent } from '../shared/track-dossier-dialog.component';
 import { PiemlChatbotComponent } from '../shared/chatbot/pieml-chatbot.component';
+import { VersionFooterComponent } from '../shared/version-footer.component';
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TrackDossierDialogComponent, PiemlChatbotComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TrackDossierDialogComponent, PiemlChatbotComponent, VersionFooterComponent],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.scss'
 })
