@@ -164,6 +164,49 @@
       flex-wrap: wrap;
       align-items: center;
     }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.15rem;
+      height: 2.15rem;
+      padding: 0;
+      border: 1px solid var(--pie-border, #e2e8f0);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--pie-navy, #1e3a5f);
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+      transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+
+      i {
+        font-size: 0.95rem;
+        line-height: 1;
+      }
+
+      &:hover:not(:disabled) {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+      }
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: wait;
+      }
+    }
+
+    .btn-icon-danger {
+      color: #b91c1c;
+      border-color: #fecaca;
+
+      &:hover:not(:disabled) {
+        background: #fef2f2;
+        border-color: #fca5a5;
+      }
+    }
   }
 
   .badge {

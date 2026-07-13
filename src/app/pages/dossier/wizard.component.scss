@@ -4,6 +4,19 @@
   h1 { color: var(--pie-primary); margin-bottom: 1.5rem; }
 }
 
+.step-hint {
+  color: var(--pie-muted);
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+}
+
+fieldset.form-grid {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
 .steps-indicator {
   display: flex;
   align-items: center;
@@ -74,12 +87,39 @@
   text-align: center;
 
   &.uploaded { border-color: var(--pie-accent); border-style: solid; background: #f0fdf4; }
+  &.rejected { border-color: #f87171; border-style: solid; background: #fef2f2; }
 
   h4 { font-size: 0.85rem; margin-bottom: 0.5rem; color: var(--pie-primary); }
   .required { color: #c0392b; }
   .optional-label { font-size: 0.75rem; color: var(--pie-muted); font-weight: normal; }
   .doc-desc { font-size: 0.75rem; color: var(--pie-muted); margin-bottom: 0.75rem; }
   &.optional { border-color: #d6eaf8; }
+}
+
+.rejection-alert {
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+
+  p { margin: 0.5rem 0 0; font-size: 0.92rem; }
+}
+
+.rejected-info {
+  color: #b91c1c;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+
+  i { margin-right: 0.5rem; }
+}
+
+.replace-btn {
+  margin-top: 0.75rem;
+  background: #fff;
+  color: var(--pie-primary);
+  border: 1px solid var(--pie-border);
 }
 
 .upload-btn {

@@ -7,6 +7,25 @@
         <span class="badge badge-blue">{{ statusLabel(dossier.status) }}</span>
       </div>
 
+      @if (dossier.status === 'DRAFT') {
+        <div class="draft-banner">
+          <p>Ce dossier est en brouillon. Téléversez les documents manquants pour le soumettre.</p>
+          <a [routerLink]="['/tableau-de-bord/nouvelle-demande', dossier.id]" class="btn btn-primary">Compléter le dossier</a>
+        </div>
+      }
+
+      @if (dossier.status === 'REJECTED') {
+        <div class="rejected-banner">
+          <div>
+            <p><strong>Dossier rejeté.</strong> Corrigez les éléments signalés puis resoumettez votre demande.</p>
+            @if (dossier.rejectionReason) {
+              <p class="rejection-reason"><strong>Motif :</strong> {{ dossier.rejectionReason }}</p>
+            }
+          </div>
+          <a [routerLink]="['/tableau-de-bord/nouvelle-demande', dossier.id]" class="btn btn-primary">Corriger et resoumettre</a>
+        </div>
+      }
+
       @if (dossier.vehicle) {
         <h2>Véhicule</h2>
         <div class="info-grid">

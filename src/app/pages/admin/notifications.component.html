@@ -70,9 +70,15 @@
               </td>
               <td>{{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
               <td class="actions">
-                <button type="button" class="btn btn-sm btn-outline" (click)="openView(n)">Afficher</button>
-                <button type="button" class="btn btn-sm btn-outline" (click)="openEdit(n)">Modifier</button>
-                <button type="button" class="btn btn-sm btn-outline btn-danger-outline" (click)="remove(n)">Supprimer</button>
+                <button type="button" class="btn-icon" (click)="openView(n)" aria-label="Afficher" title="Afficher">
+                  <i class="pi pi-eye" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="btn-icon" (click)="openEdit(n)" aria-label="Modifier" title="Modifier">
+                  <i class="pi pi-pencil" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="btn-icon btn-icon-danger" (click)="remove(n)" aria-label="Supprimer" title="Supprimer">
+                  <i class="pi pi-trash" aria-hidden="true"></i>
+                </button>
               </td>
             </tr>
           } @empty {

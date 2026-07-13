@@ -29,6 +29,13 @@
         <p>Visualisation des statistiques uniquement.</p>
       </div>
     </article>
+    <article class="roles-legend-card accent-audit">
+      <span class="roles-legend-icon"><i class="pi pi-eye"></i></span>
+      <div>
+        <strong>Auditeur</strong>
+        <p>Consultation des informations des centres associés (lecture seule).</p>
+      </div>
+    </article>
   </div>
 
 
@@ -124,19 +131,27 @@
 
               <td class="actions">
 
-                <button type="button" class="btn btn-sm btn-outline" (click)="openView(r)">Afficher</button>
+                <button type="button" class="btn-icon" (click)="openView(r)" aria-label="Afficher" title="Afficher">
+                  <i class="pi pi-eye" aria-hidden="true"></i>
+                </button>
 
-                <button type="button" class="btn btn-sm btn-outline" (click)="openEdit(r)">Modifier</button>
+                <button type="button" class="btn-icon" (click)="openEdit(r)" aria-label="Modifier" title="Modifier">
+                  <i class="pi pi-pencil" aria-hidden="true"></i>
+                </button>
 
                 @if (canManagePermissions()) {
 
-                  <button type="button" class="btn btn-sm btn-outline" (click)="openPermissions(r)">Permissions</button>
+                  <button type="button" class="btn-icon" (click)="openPermissions(r)" aria-label="Permissions" title="Permissions">
+                    <i class="pi pi-key" aria-hidden="true"></i>
+                  </button>
 
                 }
 
                 @if (canDelete(r)) {
 
-                  <button type="button" class="btn btn-sm btn-outline btn-danger-outline" (click)="remove(r)">Supprimer</button>
+                  <button type="button" class="btn-icon btn-icon-danger" (click)="remove(r)" aria-label="Supprimer" title="Supprimer">
+                    <i class="pi pi-trash" aria-hidden="true"></i>
+                  </button>
 
                 }
 

@@ -77,7 +77,7 @@ export class AdminUsersComponent implements OnInit {
   }
 
   get assignableCenters(): CenterDto[] {
-    if (this.auth.isAdmin()) return this.centers;
+    if (this.auth.role() === ROLES.SUPER_ADMIN) return this.centers;
     const allowed = new Set(this.auth.centerIds());
     return this.centers.filter(c => allowed.has(c.id));
   }
@@ -121,7 +121,7 @@ export class AdminUsersComponent implements OnInit {
   }
 
   canAssignCenters(user: AdminUserDto): boolean {
-    return user.role === ROLES.VALIDATEUR || user.role === ROLES.IMMATRICULATEUR;
+    return user.role !== ROLES.SUPER_ADMIN;
   }
 
   isCenterSelected(centerId: number): boolean {
@@ -328,7 +328,7 @@ export class AdminUsersComponent implements OnInit {
       }).subscribe({
         next: () => {
           const role = value.role!;
-          const needsCenters = role === ROLES.VALIDATEUR || role === ROLES.IMMATRICULATEUR;
+          const needsCenters = role !== ROLES.SUPER_ADMIN;
           this.success = needsCenters
             ? 'Utilisateur créé. Associez-le aux centres via l’icône carte dans la liste.'
             : 'Utilisateur créé';

@@ -62,6 +62,10 @@ export class DossierService {
     return this.api.post<DossierDto>(`/citizen/dossiers/${id}/submit`, {});
   }
 
+  resubmitDossier(id: number) {
+    return this.api.post<DossierDto>(`/citizen/dossiers/${id}/resubmit`, {});
+  }
+
   uploadDocument(dossierId: number, typeDocumentId: number, file: File) {
     const fd = new FormData();
     fd.append('typeDocumentId', String(typeDocumentId));

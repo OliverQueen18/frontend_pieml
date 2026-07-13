@@ -46,14 +46,18 @@
               <td>{{ c.dossierCount }}</td>
               <td>{{ c.createdAt | date:'dd/MM/yyyy' }}</td>
               <td class="actions">
-                <button type="button" class="btn btn-sm btn-outline" (click)="openView(c)">Afficher</button>
+                <button type="button" class="btn-icon" (click)="openView(c)" aria-label="Afficher" title="Afficher">
+                  <i class="pi pi-eye" aria-hidden="true"></i>
+                </button>
                 @if (c.enabled !== false) {
                   <button
                     type="button"
-                    class="btn btn-sm btn-outline btn-danger-outline"
+                    class="btn-icon btn-icon-danger"
                     [disabled]="removingId === c.id"
+                    aria-label="Supprimer"
+                    title="Supprimer"
                     (click)="remove(c)">
-                    {{ removingId === c.id ? '…' : 'Supprimer' }}
+                    <i class="pi" [class.pi-spin]="removingId === c.id" [class.pi-spinner]="removingId === c.id" [class.pi-trash]="removingId !== c.id" aria-hidden="true"></i>
                   </button>
                 }
               </td>

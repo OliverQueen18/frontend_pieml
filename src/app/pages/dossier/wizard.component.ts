@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { CommonModule } from '@angular/common';
 
@@ -66,12 +66,11 @@ export class DossierWizardComponent implements OnInit {
   private accountService = inject(AccountService);
 
   private router = inject(Router);
-
-
+  private route = inject(ActivatedRoute);
 
   step = 1;
-
   loading = false;
+  loadingDraft = false;
 
   loadingPaymentData = false;
 
@@ -160,29 +159,97 @@ export class DossierWizardComponent implements OnInit {
 
 
   ngOnInit() {
+    forkJoin({
+      brands: this.dossierService.getVehicleBrands(),
+      types: this.dossierService.getVehicleTypes()
+    }).subscribe({
+      next: ({ brands, types }) => {
+        this.vehicleBrands = brands.data || [];
+        this.vehicleTypes = types.data || [];
+        this.vehicleForm.get('brandId')?.valueChanges.subscribe(() => this.updateBrandOtherValidator());
 
-    this.dossierService.getVehicleBrands().subscribe({
-
-      next: res => this.vehicleBrands = res.data || [],
-
-      error: () => this.error = 'Impossible de charger les marques'
-
+        const dossierId = Number(this.route.snapshot.paramMap.get('dossierId'));
+        if (dossierId) {
+          this.resumeDossier(dossierId);
+        }
+      },
+      error: () => this.error = 'Impossible de charger les données du formulaire'
     });
+  }
 
+  get isResumingDraft(): boolean {
+    return this.dossier?.status === 'DRAFT';
+  }
 
+  get isRejectedDossier(): boolean {
+    return this.dossier?.status === 'REJECTED';
+  }
 
-    this.dossierService.getVehicleTypes().subscribe({
+  get isResumingExisting(): boolean {
+    return this.isResumingDraft || this.isRejectedDossier;
+  }
 
-      next: res => this.vehicleTypes = res.data || [],
+  get wizardTitle(): string {
+    if (this.isRejectedDossier) return 'Corriger mon dossier rejeté';
+    if (this.isResumingDraft) return 'Compléter mon dossier';
+    return 'Nouvelle demande d\'immatriculation';
+  }
 
-      error: () => this.error = 'Impossible de charger les types d\'engin'
+  private resumeDossier(dossierId: number) {
+    this.loadingDraft = true;
+    this.error = '';
 
+    this.dossierService.getDossier(dossierId).subscribe({
+      next: res => {
+        const dossier = res.data;
+        if (!dossier) {
+          this.error = 'Dossier introuvable';
+          this.loadingDraft = false;
+          return;
+        }
+
+        this.dossier = dossier;
+        this.patchVehicleForm(dossier);
+
+        if (dossier.status === 'DRAFT' || dossier.status === 'REJECTED') {
+          this.step = 2;
+        } else if (dossier.status === 'SUBMITTED' || dossier.status === 'PAYMENT_PENDING') {
+          this.step = 3;
+          this.loadPaymentData();
+        } else {
+          this.router.navigate(['/tableau-de-bord/dossier', dossier.id]);
+          return;
+        }
+
+        this.loadingDraft = false;
+      },
+      error: err => {
+        this.error = err.error?.message || 'Impossible de charger le dossier';
+        this.loadingDraft = false;
+      }
     });
+  }
 
+  private patchVehicleForm(dossier: DossierDto) {
+    const vehicle = dossier.vehicle;
+    if (!vehicle) return;
 
+    const brand = this.vehicleBrands.find(b => b.id === vehicle.brandId);
+    const isOtherBrand = brand?.code === 'AUTRE';
 
-    this.vehicleForm.get('brandId')?.valueChanges.subscribe(() => this.updateBrandOtherValidator());
-
+    this.vehicleForm.patchValue({
+      brandId: vehicle.brandId ?? null,
+      vehicleTypeId: vehicle.vehicleTypeId ?? null,
+      brandOther: isOtherBrand ? vehicle.brand : '',
+      model: vehicle.model ?? '',
+      engineCapacity: vehicle.engineCapacity ?? '125CC',
+      engineNumber: vehicle.engineNumber ?? '',
+      chassisNumber: vehicle.chassisNumber ?? '',
+      color: vehicle.color ?? '',
+      year: vehicle.year != null ? String(vehicle.year) : String(this.maxYear),
+      countryOfOrigin: vehicle.countryOfOrigin ?? ''
+    });
+    this.updateBrandOtherValidator();
   }
 
 
@@ -313,6 +380,14 @@ export class DossierWizardComponent implements OnInit {
 
 
 
+  onVehicleStepNext() {
+    if (this.isResumingExisting) {
+      this.step = 2;
+      return;
+    }
+    this.createDossier();
+  }
+
   createDossier() {
 
     this.updateBrandOtherValidator();
@@ -431,22 +506,53 @@ export class DossierWizardComponent implements OnInit {
 
 
   allRequiredDocsUploaded(): boolean {
-
     return this.documents
-
       .filter(d => d.typeDocument.obligatoire)
+      .every(d => d.status === 'UPLOADED' || d.status === 'VALIDATED');
+  }
 
-      .every(d => d.status === 'UPLOADED');
+  canReplaceDocument(doc: DocumentDto): boolean {
+    return this.isRejectedDossier || doc.status === 'REJECTED';
+  }
 
+  submitLabel(): string {
+    return this.isRejectedDossier ? 'Resoumettre le dossier' : 'Suivant';
   }
 
 
 
   goToPayment() {
-
     if (!this.dossier) return;
 
+    if (this.dossier.status === 'REJECTED') {
+      this.loading = true;
+      this.error = '';
+      this.dossierService.resubmitDossier(this.dossier.id).subscribe({
+        next: res => {
+          this.dossier = res.data;
+          this.loading = false;
+          if (this.dossier?.status === 'SUBMITTED' || this.dossier?.status === 'PAYMENT_PENDING') {
+            this.step = 3;
+            this.success = 'Dossier corrigé. Procédez au paiement si nécessaire.';
+            this.loadPaymentData();
+          } else {
+            this.success = 'Dossier corrigé et renvoyé pour traitement.';
+            this.router.navigate(['/tableau-de-bord/dossier', this.dossier!.id]);
+          }
+        },
+        error: err => {
+          this.error = err.error?.message || 'Impossible de resoumettre le dossier';
+          this.loading = false;
+        }
+      });
+      return;
+    }
 
+    if (this.dossier.status !== 'DRAFT') {
+      this.step = 3;
+      this.loadPaymentData();
+      return;
+    }
 
     this.loading = true;
 

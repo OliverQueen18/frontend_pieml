@@ -2,6 +2,11 @@
   <div class="page-header">
     <h2>Tableau de bord administration</h2>
     <p>Vue d'ensemble de la plateforme d'immatriculation.</p>
+    @if (auth.hasCenterScope()) {
+      <p class="scope-hint">
+        Statistiques limitées à vos centres : {{ auth.centerNames().join(', ') }}
+      </p>
+    }
   </div>
 
   @if (error) { <div class="alert error">{{ error }}</div> }

@@ -33,6 +33,7 @@ export const routes: Routes = [
 
       { path: '', loadComponent: () => import('./pages/dashboard/home.component').then(m => m.DashboardHomeComponent) },
 
+      { path: 'nouvelle-demande/:dossierId', loadComponent: () => import('./pages/dossier/wizard.component').then(m => m.DossierWizardComponent) },
       { path: 'nouvelle-demande', loadComponent: () => import('./pages/dossier/wizard.component').then(m => m.DossierWizardComponent) },
 
       { path: 'dossier/:id', loadComponent: () => import('./pages/dossier/detail.component').then(m => m.DossierDetailComponent) },

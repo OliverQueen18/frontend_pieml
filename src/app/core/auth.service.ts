@@ -37,7 +37,8 @@ export class AuthService {
   centerNames = computed(() => this.userSignal()?.centerNames ?? []);
   hasCenterScope = computed(() => {
     const role = this.role();
-    return (role === 'VALIDATEUR' || role === 'IMMATRICULATEUR') && this.centerIds().length > 0;
+    if (role === ROLES.SUPER_ADMIN) return false;
+    return this.centerIds().length > 0;
   });
 
   hasPermission(code: string): boolean {

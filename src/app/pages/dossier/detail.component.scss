@@ -22,6 +22,46 @@
   gap: 0.75rem;
 }
 
+.draft-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+
+  p {
+    margin: 0;
+    color: #9a3412;
+  }
+}
+
+.rejected-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+
+  p {
+    margin: 0 0 0.35rem;
+    color: #991b1b;
+  }
+
+  .rejection-reason {
+    font-size: 0.92rem;
+  }
+}
+
 h2 {
   color: var(--pie-primary);
   font-size: 1rem;

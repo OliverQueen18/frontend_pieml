@@ -1,6 +1,6 @@
 import { FAQ_ITEMS } from '../faq.data';
 
-export type ChatbotContext = 'public' | 'citizen';
+export type ChatbotContext = 'public' | 'citizen' | 'admin';
 
 export interface ChatbotLink {
   label: string;
@@ -49,6 +49,23 @@ export const CHATBOT_CITIZEN_QUICK_PROMPTS: { label: string; query: string }[] =
   { label: 'Téléverser des documents', query: 'comment téléverser mes documents' },
   { label: 'Payer et prendre RDV', query: 'comment payer et prendre rendez-vous' },
   { label: 'Modifier mon profil', query: 'comment modifier mon profil réclamation' }
+];
+
+export const CHATBOT_ADMIN_WELCOME: ChatbotReply = {
+  text: 'Bonjour ! Je suis l\'assistant administration PIEML. Je peux vous guider dans la navigation, les rôles, l\'association aux centres, la validation des dossiers et le rôle auditeur.',
+  links: [
+    { label: 'Tableau de bord', routerLink: '/administration' },
+    { label: 'Dossiers', routerLink: '/administration/dossiers' },
+    { label: 'Comptes staff', routerLink: '/administration/utilisateurs' }
+  ]
+};
+
+export const CHATBOT_ADMIN_QUICK_PROMPTS: { label: string; query: string }[] = [
+  { label: 'Associer un utilisateur à des centres', query: 'comment associer un utilisateur aux centres' },
+  { label: 'Rôle auditeur', query: 'qu est ce que le role audit auditeur' },
+  { label: 'Valider un dossier', query: 'comment valider un dossier' },
+  { label: 'Gérer les comptes staff', query: 'comment gerer les comptes staff utilisateurs' },
+  { label: 'Centres et configuration', query: 'comment gerer les centres configuration' }
 ];
 
 const CITIZEN_GUIDE_ENTRIES: ChatbotKnowledgeEntry[] = [
@@ -281,6 +298,102 @@ const FAQ_ENTRIES: ChatbotKnowledgeEntry[] = FAQ_ITEMS.map(item => ({
   reply: { text: item.answer }
 }));
 
+const ADMIN_GUIDE_ENTRIES: ChatbotKnowledgeEntry[] = [
+  {
+    keywords: ['tableau', 'bord', 'administration', 'accueil', 'statistiques', 'dashboard'],
+    reply: {
+      text: 'Le tableau de bord administration affiche les indicateurs clés : dossiers en cours, validations, paiements. Les données sont filtrées selon vos centres associés, sauf pour le super administrateur qui voit l\'ensemble.',
+      links: [{ label: 'Tableau de bord', routerLink: '/administration' }]
+    }
+  },
+  {
+    keywords: ['dossier', 'dossiers', 'liste', 'traiter', 'consulter', 'filtrer'],
+    reply: {
+      text: 'Dans « Tous les dossiers », consultez et filtrez les demandes par statut, référence ou citoyen. Les validateurs peuvent approuver ou rejeter ; les immatriculateurs traitent les rendez-vous. Vous ne voyez que les dossiers de vos centres.',
+      links: [{ label: 'Dossiers', routerLink: '/administration/dossiers' }]
+    }
+  },
+  {
+    keywords: ['valider', 'validation', 'rejeter', 'rejet', 'approuver', 'refuser'],
+    reply: {
+      text: 'Ouvrez un dossier au statut « Payé » ou « Soumis », vérifiez les documents puis validez ou rejetez avec un motif. Seuls les rôles autorisés (validateur, gestionnaire) peuvent effectuer ces actions.',
+      links: [{ label: 'Dossiers', routerLink: '/administration/dossiers' }]
+    }
+  },
+  {
+    keywords: ['centre', 'centres', 'associer', 'association', 'affecter', 'carte', 'perimetre', 'périmètre'],
+    reply: {
+      text: 'Tous les comptes staff (sauf super administrateur) peuvent être associés à un ou plusieurs centres. Dans « Comptes staff », utilisez l\'icône carte pour choisir les centres. L\'accès aux dossiers et données est limité à ces centres.',
+      links: [{ label: 'Comptes staff', routerLink: '/administration/utilisateurs' }]
+    }
+  },
+  {
+    keywords: ['audit', 'auditeur', 'lecture', 'consultation', 'controle', 'contrôle'],
+    reply: {
+      text: 'Le rôle Auditeur permet une consultation en lecture seule : dossiers, citoyens, paiements, notifications et centres associés. L\'auditeur ne peut ni valider, ni modifier, ni supprimer. Associez-le aux centres à superviser.',
+      links: [
+        { label: 'Rôles', routerLink: '/administration/roles' },
+        { label: 'Comptes staff', routerLink: '/administration/utilisateurs' }
+      ]
+    }
+  },
+  {
+    keywords: ['role', 'rôle', 'roles', 'rôles', 'permission', 'droits', 'profil', 'staff'],
+    reply: {
+      text: 'Les rôles définissent les fonctionnalités accessibles : super administrateur (tout), gestionnaire de centre, validateur, immatriculateur, utilisateur, public et auditeur. Consultez « Rôles » pour les permissions de chaque profil.',
+      links: [{ label: 'Gestion des rôles', routerLink: '/administration/roles' }]
+    }
+  },
+  {
+    keywords: ['utilisateur', 'utilisateurs', 'compte', 'comptes', 'staff', 'creer', 'créer', 'mot de passe'],
+    reply: {
+      text: 'Dans « Comptes staff », créez ou modifiez les utilisateurs administration : nom, email, rôle et activation. Après création, associez-les aux centres (sauf super administrateur). Vous pouvez réinitialiser le mot de passe par email.',
+      links: [{ label: 'Comptes staff', routerLink: '/administration/utilisateurs' }]
+    }
+  },
+  {
+    keywords: ['citoyen', 'citoyens', 'reclamation', 'réclamation', 'profil'],
+    reply: {
+      text: 'La section Citoyens liste les demandeurs inscrits. Les réclamations de profil permettent de traiter les demandes de modification d\'informations personnelles avec justificatif.',
+      links: [
+        { label: 'Citoyens', routerLink: '/administration/citoyens' },
+        { label: 'Réclamations profil', routerLink: '/administration/reclamations-profil' }
+      ]
+    }
+  },
+  {
+    keywords: ['paiement', 'paiements', 'recette', 'recettes', 'tarif', 'tarifs', 'situation'],
+    reply: {
+      text: 'Consultez les paiements confirmés et la situation des recettes depuis le menu Configuration. Les droits d\'accès dépendent de votre rôle et de vos centres associés.',
+      links: [
+        { label: 'Paiements', routerLink: '/administration/paiements' },
+        { label: 'Situation des recettes', routerLink: '/administration/situation-recettes' }
+      ]
+    }
+  },
+  {
+    keywords: ['configuration', 'document', 'marque', 'engin', 'notification', 'parametre', 'paramètre'],
+    reply: {
+      text: 'Le menu Configuration regroupe les centres, types de documents, marques, types d\'engins, notifications, tarifs et rôles. Certaines sections sont réservées au super administrateur ou aux gestionnaires autorisés.',
+      links: [{ label: 'Centres', routerLink: '/administration/centres' }]
+    }
+  },
+  {
+    keywords: ['super', 'administrateur', 'super admin', 'tous les droits'],
+    reply: {
+      text: 'Le super administrateur a accès à toute la plateforme sans restriction de centre. Il n\'est pas associé à des centres et peut gérer la configuration complète, y compris la création de comptes auditeur.',
+      links: [{ label: 'Rôles', routerLink: '/administration/roles' }]
+    }
+  },
+  {
+    keywords: ['aide', 'assistant', 'navigation', 'menu'],
+    reply: {
+      text: 'Utilisez le menu latéral : Tableau de bord, Dossiers, Utilisateurs (citoyens, comptes staff), puis Configuration (centres, documents, rôles, paiements…). Posez-moi une question précise pour aller plus loin.',
+      links: [{ label: 'Tableau de bord', routerLink: '/administration' }]
+    }
+  }
+];
+
 const CHATBOT_FALLBACK: ChatbotReply = {
   text: 'Je n\'ai pas trouvé de réponse précise à votre question. Consultez la FAQ ou contactez-nous — un agent pourra vous aider.',
   links: [
@@ -294,6 +407,14 @@ const CHATBOT_CITIZEN_FALLBACK: ChatbotReply = {
   links: [
     { label: 'FAQ', routerLink: '/tableau-de-bord/faq' },
     { label: 'Nous contacter', routerLink: '/tableau-de-bord/contact' }
+  ]
+};
+
+const CHATBOT_ADMIN_FALLBACK: ChatbotReply = {
+  text: 'Je n\'ai pas trouvé de réponse précise à votre question. Reformulez votre demande ou consultez directement la section concernée dans le menu administration.',
+  links: [
+    { label: 'Tableau de bord', routerLink: '/administration' },
+    { label: 'Dossiers', routerLink: '/administration/dossiers' }
   ]
 };
 
@@ -318,6 +439,9 @@ const CITIZEN_FRAGMENT_ROUTES: Record<string, string> = {
 };
 
 function entriesForContext(context: ChatbotContext): ChatbotKnowledgeEntry[] {
+  if (context === 'admin') {
+    return ADMIN_GUIDE_ENTRIES;
+  }
   if (context === 'citizen') {
     return [...CITIZEN_GUIDE_ENTRIES, ...GUIDE_ENTRIES, ...FAQ_ENTRIES];
   }
@@ -325,11 +449,15 @@ function entriesForContext(context: ChatbotContext): ChatbotKnowledgeEntry[] {
 }
 
 export function getChatbotWelcome(context: ChatbotContext): ChatbotReply {
-  return context === 'citizen' ? CHATBOT_CITIZEN_WELCOME : CHATBOT_WELCOME;
+  if (context === 'citizen') return CHATBOT_CITIZEN_WELCOME;
+  if (context === 'admin') return CHATBOT_ADMIN_WELCOME;
+  return CHATBOT_WELCOME;
 }
 
 export function getChatbotQuickPrompts(context: ChatbotContext): { label: string; query: string }[] {
-  return context === 'citizen' ? CHATBOT_CITIZEN_QUICK_PROMPTS : CHATBOT_QUICK_PROMPTS;
+  if (context === 'citizen') return CHATBOT_CITIZEN_QUICK_PROMPTS;
+  if (context === 'admin') return CHATBOT_ADMIN_QUICK_PROMPTS;
+  return CHATBOT_QUICK_PROMPTS;
 }
 
 export function getCitizenRouteForFragment(fragment: string): string | null {
@@ -337,7 +465,7 @@ export function getCitizenRouteForFragment(fragment: string): string | null {
 }
 
 function adaptReplyForContext(reply: ChatbotReply, context: ChatbotContext): ChatbotReply {
-  if (context === 'public') {
+  if (context === 'public' || context === 'admin') {
     return reply;
   }
 
@@ -428,6 +556,10 @@ export function findChatbotReply(query: string, context: ChatbotContext = 'publi
     return adaptReplyForContext(best.reply, context);
   }
 
-  const fallback = context === 'citizen' ? CHATBOT_CITIZEN_FALLBACK : CHATBOT_FALLBACK;
+  const fallback = context === 'citizen'
+    ? CHATBOT_CITIZEN_FALLBACK
+    : context === 'admin'
+      ? CHATBOT_ADMIN_FALLBACK
+      : CHATBOT_FALLBACK;
   return adaptReplyForContext(fallback, context);
 }

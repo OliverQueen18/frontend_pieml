@@ -65,8 +65,12 @@
                 </button>
               </td>
               <td class="actions">
-                <button type="button" class="btn btn-sm btn-outline" (click)="openEdit(t)">Modifier</button>
-                <button type="button" class="btn btn-sm btn-outline" (click)="remove(t.id)">Supprimer</button>
+                <button type="button" class="btn-icon" (click)="openEdit(t)" aria-label="Modifier" title="Modifier">
+                  <i class="pi pi-pencil" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="btn-icon btn-icon-danger" (click)="remove(t.id)" aria-label="Supprimer" title="Supprimer">
+                  <i class="pi pi-trash" aria-hidden="true"></i>
+                </button>
               </td>
             </tr>
           } @empty {

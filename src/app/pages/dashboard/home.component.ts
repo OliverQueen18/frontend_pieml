@@ -72,7 +72,7 @@ export class DashboardHomeComponent implements OnInit {
 
       this.activeDossier = this.dossiers.find(d =>
 
-        ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'PAYMENT_PENDING', 'PAID', 'VALIDATED', 'APPOINTMENT_SCHEDULED', 'IMMATRICULATION_IN_PROGRESS'].includes(d.status)
+        ['DRAFT', 'REJECTED', 'SUBMITTED', 'IN_REVIEW', 'PAYMENT_PENDING', 'PAID', 'VALIDATED', 'APPOINTMENT_SCHEDULED', 'IMMATRICULATION_IN_PROGRESS'].includes(d.status)
 
       ) || this.dossiers[0] || null;
 

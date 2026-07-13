@@ -1,6 +1,12 @@
 @use './admin-page';
 
 .dashboard-home {
+  .scope-hint {
+    margin-top: 0.35rem;
+    font-size: 0.88rem;
+    color: var(--pie-muted);
+  }
+
   .dashboard-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 320px;

@@ -60,7 +60,15 @@
         </ul>
         @if (activeDossier.status === 'DRAFT') {
           <div class="draft-actions">
-            <a routerLink="/tableau-de-bord/nouvelle-demande" class="btn btn-primary">Compléter mon dossier</a>
+            <a [routerLink]="['/tableau-de-bord/nouvelle-demande', activeDossier.id]" class="btn btn-primary">Compléter mon dossier</a>
+          </div>
+        }
+        @if (activeDossier.status === 'REJECTED') {
+          <div class="draft-actions">
+            @if (activeDossier.rejectionReason) {
+              <p class="rejection-note"><strong>Motif :</strong> {{ activeDossier.rejectionReason }}</p>
+            }
+            <a [routerLink]="['/tableau-de-bord/nouvelle-demande', activeDossier.id]" class="btn btn-primary">Corriger et resoumettre</a>
           </div>
         }
       </div>
@@ -93,6 +101,12 @@
               <td><span class="badge" [class]="statusClass(d.status)">{{ statusLabel(d.status) }}</span></td>
               <td class="row-actions">
                 <a [routerLink]="['/tableau-de-bord/dossier', d.id]" title="Voir"><i class="pi pi-eye"></i></a>
+                @if (isDraft(d)) {
+                  <a [routerLink]="['/tableau-de-bord/nouvelle-demande', d.id]" title="Compléter le brouillon"><i class="pi pi-pencil"></i></a>
+                }
+                @if (d.status === 'REJECTED') {
+                  <a [routerLink]="['/tableau-de-bord/nouvelle-demande', d.id]" title="Corriger le dossier rejeté"><i class="pi pi-refresh"></i></a>
+                }
                 @if (isDraft(d)) {
                   <button
                     type="button"

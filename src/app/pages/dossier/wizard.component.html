@@ -1,6 +1,6 @@
 <div class="wizard">
   <div class="wizard-header">
-    <h1>Nouvelle demande d'immatriculation</h1>
+    <h1>{{ wizardTitle }}</h1>
     <div class="steps-indicator">
       @for (s of [1,2,3]; track s) {
         <div class="step-dot" [class.active]="step >= s" [class.current]="step === s">
@@ -17,12 +17,21 @@
   @if (error) { <div class="alert alert-error">{{ error }}</div> }
   @if (success) { <div class="alert alert-success">{{ success }}</div> }
 
+  @if (loadingDraft) {
+    <div class="card step-content">
+      <p>Chargement du dossier...</p>
+    </div>
+  }
+
   <!-- Step 1: Vehicle -->
-  @if (step === 1) {
+  @if (!loadingDraft && step === 1) {
     <div class="card step-content">
       <h2>Informations de l'engin</h2>
-      <form [formGroup]="vehicleForm" (ngSubmit)="createDossier()">
-        <div class="form-grid">
+      @if (isResumingExisting) {
+        <p class="step-hint">Récapitulatif de votre dossier. Pour modifier l'engin, supprimez le brouillon et créez une nouvelle demande.</p>
+      }
+      <form [formGroup]="vehicleForm" (ngSubmit)="onVehicleStepNext()">
+        <fieldset class="form-grid" [disabled]="isResumingExisting">
           <div class="form-group">
             <label>Type d'engin *</label>
             <select formControlName="vehicleTypeId">
@@ -90,11 +99,17 @@
               }
             </select>
           </div>
-        </div>
+        </fieldset>
         <div class="actions">
           <button type="button" class="btn btn-outline" (click)="finish()">Annuler</button>
-          <button type="submit" class="btn btn-primary" [disabled]="loading || vehicleForm.invalid">
-            {{ loading ? 'Création...' : 'Suivant' }}
+          <button type="submit" class="btn btn-primary" [disabled]="loading || (!isResumingExisting && vehicleForm.invalid)">
+            @if (loading) {
+              {{ isResumingExisting ? 'Chargement...' : 'Création...' }}
+            } @else if (isResumingExisting) {
+              Continuer vers les documents
+            } @else {
+              Suivant
+            }
           </button>
         </div>
       </form>
@@ -102,16 +117,25 @@
   }
 
   <!-- Step 2: Documents -->
-  @if (step === 2 && dossier) {
+  @if (!loadingDraft && step === 2 && dossier) {
     <div class="card step-content">
       <h2>Téléversement des documents</h2>
+      @if (isRejectedDossier && dossier.rejectionReason) {
+        <div class="rejection-alert">
+          <strong>Motif du rejet :</strong> {{ dossier.rejectionReason }}
+          <p>Téléversez à nouveau les documents concernés puis resoumettez votre dossier.</p>
+        </div>
+      }
       <div class="ref-row">
         <p class="ref">Dossier : <strong>{{ dossier.referenceNumber }}</strong></p>
         <app-dossier-qr [reference]="dossier.referenceNumber" [compact]="true" [showHint]="false" />
       </div>
       <div class="upload-grid">
         @for (doc of documents; track doc.id) {
-          <div class="upload-card" [class.uploaded]="doc.status === 'UPLOADED'" [class.optional]="!doc.typeDocument.obligatoire">
+          <div class="upload-card"
+            [class.uploaded]="doc.status === 'UPLOADED' || doc.status === 'VALIDATED'"
+            [class.rejected]="doc.status === 'REJECTED'"
+            [class.optional]="!doc.typeDocument.obligatoire">
             <h4>
               {{ doc.typeDocument.libelle }}
               @if (doc.typeDocument.obligatoire) { <span class="required">*</span> }
@@ -120,11 +144,26 @@
             @if (doc.typeDocument.description) {
               <p class="doc-desc">{{ doc.typeDocument.description }}</p>
             }
-            @if (doc.status === 'UPLOADED') {
+            @if (doc.status === 'REJECTED') {
+              <div class="rejected-info">
+                <i class="pi pi-times-circle"></i>
+                <span>Document rejeté — merci de le téléverser à nouveau</span>
+              </div>
+            }
+            @if ((doc.status === 'UPLOADED' || doc.status === 'VALIDATED') && !canReplaceDocument(doc)) {
               <div class="uploaded-info">
                 <i class="pi pi-check-circle"></i>
                 <span>{{ doc.fileName }}</span>
               </div>
+            } @else if (doc.status === 'UPLOADED' || doc.status === 'VALIDATED') {
+              <div class="uploaded-info">
+                <i class="pi pi-check-circle"></i>
+                <span>{{ doc.fileName }}</span>
+              </div>
+              <label class="upload-btn replace-btn">
+                <input type="file" (change)="onFileSelected(doc.typeDocument.id, $event)" accept="image/*,.pdf" hidden>
+                @if (uploadProgress[doc.typeDocument.id]) { Chargement... } @else { Remplacer le fichier }
+              </label>
             } @else {
               <label class="upload-btn">
                 <input type="file" (change)="onFileSelected(doc.typeDocument.id, $event)" accept="image/*,.pdf" hidden>
@@ -135,9 +174,9 @@
         }
       </div>
       <div class="actions">
-        <button type="button" class="btn btn-outline" (click)="step = 1">Retour</button>
+        <button type="button" class="btn btn-outline" (click)="step = 1">Voir l'engin</button>
         <button type="button" class="btn btn-primary" [disabled]="loading || !allRequiredDocsUploaded()" (click)="goToPayment()">
-          Suivant
+          {{ submitLabel() }}
         </button>
       </div>
     </div>

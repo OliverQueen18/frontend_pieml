@@ -58,13 +58,15 @@ export class PiemlChatbotComponent implements AfterViewChecked {
   }
 
   get subtitle() {
-    return this.context === 'citizen'
-      ? 'Aide espace citoyen'
-      : 'Guide d\'immatriculation en ligne';
+    if (this.context === 'citizen') return 'Aide espace citoyen';
+    if (this.context === 'admin') return 'Assistant administration';
+    return 'Guide d\'immatriculation en ligne';
   }
 
   get inputId() {
-    return this.context === 'citizen' ? 'chatbot-input-citizen' : 'chatbot-input-public';
+    if (this.context === 'citizen') return 'chatbot-input-citizen';
+    if (this.context === 'admin') return 'chatbot-input-admin';
+    return 'chatbot-input-public';
   }
 
   ngAfterViewChecked() {
